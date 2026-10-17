@@ -2,7 +2,7 @@
 setlocal
 chcp 65001 >nul
 REM ============================================================
-REM  Qoder login-state switcher / signin launcher (Windows) - daily-checkin
+REM  Qoder login-state switcher / signin launcher (Windows) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show|signin]
 REM  It just delegates to switch_auth.py (Python).
 REM ============================================================

@@ -119,7 +119,7 @@ python switchers/workbuddy/switch_auth.py show       # 仅输出当前 WORKBUDDY
 
 ```bash
 schtasks /Create /TN WorkBuddyAutoCheckin /SC DAILY /ST 09:00 /F ^
-  /TR "cmd /c cd /d %USERPROFILE%\daily-checkin && python platforms\workbuddy.py"
+  /TR "cmd /c cd /d %USERPROFILE%\aidaka && python platforms\workbuddy.py"
 ```
 
 **方式二：WorkBuddy 内置自动化**

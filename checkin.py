@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-daily-checkin 统一签到入口
+aidaka 统一签到入口
 ==========================
 一条命令跑完所有已配置平台的每日签到，也可只跑指定平台。
 
@@ -40,7 +40,7 @@ def load_platform(key):
     path = os.path.join(PLATFORMS_DIR, key + ".py")
     if not os.path.isfile(path):
         return None
-    spec = importlib.util.spec_from_file_location("daily_checkin_platform_%s" % key, path)
+    spec = importlib.util.spec_from_file_location("aidaka_platform_%s" % key, path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -58,7 +58,7 @@ def platform_meta(key):
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="checkin.py",
-        description="daily-checkin 统一签到入口（ima / WorkBuddy / Qoder / TraeWork）",
+        description="aidaka 统一签到入口（ima / WorkBuddy / Qoder / TraeWork）",
     )
     parser.add_argument("platforms", nargs="*",
                         help="要签到的平台，缺省为全部；可用: %s" % " ".join(PLATFORM_ORDER))
@@ -81,7 +81,7 @@ def main(argv=None):
     if unknown:
         parser.error("未知平台: %s（可用: %s）" % (", ".join(unknown), ", ".join(PLATFORM_ORDER)))
 
-    print("=== daily-checkin 开始: %s ===" % ", ".join(keys))
+    print("=== aidaka 开始: %s ===" % ", ".join(keys))
     results = {}
     for key in keys:
         mod = load_platform(key)
@@ -99,7 +99,7 @@ def main(argv=None):
         results[key] = int(rc or 0)
         time.sleep(1)
 
-    print("\n=== daily-checkin 汇总 ===")
+    print("\n=== aidaka 汇总 ===")
     for key in keys:
         mark = "OK" if results.get(key, 1) == 0 else "失败"
         print("  %-10s %s" % (key, mark))

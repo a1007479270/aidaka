@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ima (ima.copilot 腾讯AI工作台) 「每日登录福利」自动签到 - daily-checkin 项目平台模块
+ima (ima.copilot 腾讯AI工作台) 「每日登录福利」自动签到 - aidaka 项目平台模块
 纯标准库实现，零第三方依赖。
 
 两种用法:

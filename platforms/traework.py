@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TraeWork 每日积分签到 - daily-checkin 项目平台模块
+TraeWork 每日积分签到 - aidaka 项目平台模块
 纯标准库实现，零第三方依赖。
 
 两种用法:
@@ -229,7 +229,7 @@ def run(dry_run: bool = False, debug: bool = False) -> int:
 
 def main(argv=None) -> int:
     """命令行入口: python traework.py [--dry-run] [--debug]"""
-    parser = argparse.ArgumentParser(description="TraeWork 每日积分签到（daily-checkin 平台模块）")
+    parser = argparse.ArgumentParser(description="TraeWork 每日积分签到（aidaka 平台模块）")
     parser.add_argument("--debug", action="store_true",
                         help="打印接口原始响应（也可用环境变量 TRAEWORK_DEBUG=1）")
     parser.add_argument("--dry-run", action="store_true",

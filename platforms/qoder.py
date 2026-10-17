@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Qoder (Qoder CN) 每日领取 Credits - daily-checkin 项目平台模块
+Qoder (Qoder CN) 每日领取 Credits - aidaka 项目平台模块
 纯标准库实现，零第三方依赖；青龙上传单文件即可跑，本机也能直接跑。
 统一入口: 在仓库根目录运行  python checkin.py qoder [--dry-run] [--debug]
 

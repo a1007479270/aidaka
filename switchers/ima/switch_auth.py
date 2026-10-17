@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 r"""
-ima 登录凭证(多账号) 提取/备份/查看/还原 一体脚本 (daily-checkin 项目 · ima 平台)
+ima 登录凭证(多账号) 提取/备份/查看/还原 一体脚本 (aidaka 项目 · ima 平台)
 备份/查看/还原为纯标准库；仅 [e] 提取功能需要 Windows + cryptography 库。
 
 原理:

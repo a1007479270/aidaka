@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-WorkBuddy (腾讯 codebuddy) 每日积分签到 - daily-checkin 项目平台模块
+WorkBuddy (腾讯 codebuddy) 每日积分签到 - aidaka 项目平台模块
 纯标准库实现，零第三方依赖。
 
 两种用法:

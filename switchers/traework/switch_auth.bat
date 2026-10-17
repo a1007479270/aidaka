@@ -2,7 +2,7 @@
 setlocal
 chcp 65001 >nul
 REM ============================================================
-REM  TraeWork login-state switcher (Windows launcher) - daily-checkin
+REM  TraeWork login-state switcher (Windows launcher) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show]
 REM  It delegates to switch_auth.py (Python).
 REM  TraeWork 登录态是加密的(AES-128-CBC)，需要 cryptography，缺失时会自动安装。

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-WorkBuddy 登录态备份 / 恢复 / 查看 一体脚本（daily-checkin 项目 · Windows 一键版，纯标准库）
+WorkBuddy 登录态备份 / 恢复 / 查看 一体脚本（aidaka 项目 · Windows 一键版，纯标准库）
 
 一个脚本搞定:
   - 备份当前桌面端登录态

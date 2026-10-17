@@ -2,7 +2,7 @@
 setlocal
 chcp 65001 >nul
 REM ============================================================
-REM  ima credential manager (Windows launcher) - daily-checkin
+REM  ima credential manager (Windows launcher) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show|extract]
 REM  It delegates to switch_auth.py (Python).
 REM  ima 凭证提取需要 cryptography 库，缺失时会自动安装。

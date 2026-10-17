@@ -1,4 +1,4 @@
-# 金山文档 AirScript 版 · 零服务器签到
+# aidaka · WPS 云端版（AirScript，零服务器签到）
 
 把 ima / WorkBuddy / Qoder / TraeWork 四个平台的每日签到，交给**金山文档（WPS）智能表格**的
 AirScript 云端定时任务执行——不用服务器、不用青龙、不用电脑常开，关机也照跑。

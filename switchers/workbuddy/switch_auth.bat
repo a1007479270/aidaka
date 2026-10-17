@@ -2,7 +2,7 @@
 setlocal
 chcp 65001 >nul
 REM ============================================================
-REM  WorkBuddy login-state switcher (Windows launcher) - daily-checkin
+REM  WorkBuddy login-state switcher (Windows launcher) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show]
 REM  It just delegates to switch_auth.py (Python).
 REM ============================================================

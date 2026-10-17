@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TraeWork 登录态备份 / 恢复 / 查看 一体脚本（daily-checkin 项目 · Windows 一键版）
+TraeWork 登录态备份 / 恢复 / 查看 一体脚本（aidaka 项目 · Windows 一键版）
 
 一个脚本搞定:
   - 备份当前桌面端登录态（多账号逐个登录、逐个备份，即实现多账号切换）

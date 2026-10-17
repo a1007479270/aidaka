@@ -1,7 +1,7 @@
 // ============================================================
-// ai自动签到 - 四平台每日签到 (AirScript 版)
+// aidaka · AI 打卡机 - 四平台每日签到 (AirScript 版)
 //
-// 来源: daily-checkin / wps-airscript/checkin.js
+// 来源: aidaka / wps-airscript/checkin.js
 // 说明文档: wps-airscript/README.md    部署页: wps-airscript/deploy.html
 // 模板表格: https://www.kdocs.cn/l/ckNJ04YURB8F
 //

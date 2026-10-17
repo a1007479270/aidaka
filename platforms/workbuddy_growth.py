@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-WorkBuddy 成长计划 - 额外奖励自动领取 (daily-checkin 附属脚本, 青龙 / 本地通用)
+WorkBuddy 成长计划 - 额外奖励自动领取 (aidaka 附属脚本, 青龙 / 本地通用)
 ========================================================================
 背景:
   桌面端"成长计划"会跳转到网页版 www.workbuddy.cn/profile/plans-usage,

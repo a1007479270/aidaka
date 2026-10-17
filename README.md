@@ -1,7 +1,15 @@
-# daily-checkin · 每日签到工具箱
+# aidaka · AI 打卡机
 
-一站式自动签到工具集，把 **ima / WorkBuddy / Qoder / TraeWork** 四个平台的每日积分签到收进一个仓库：
-青龙面板多账号签到 + 桌面端登录态备份/切换 + 本机定时 + **金山文档云端定时（零服务器）**，全部纯 Python 标准库实现，**签到脚本零第三方依赖**。
+> **ima / WorkBuddy / Qoder / TraeWork 四平台每日签到，本地、青龙、WPS 云端三种部署方式。**
+
+把四个 AI 编程工具的每日积分签到收进一个仓库：青龙面板多账号签到、桌面端登录态备份/切换、
+本机定时、**金山文档云端定时（零服务器，关机也照跑）**。签到脚本纯 Python 标准库，**零第三方依赖**。
+
+| 跑在哪 | 需要常开设备 | 适合谁 |
+| --- | --- | --- |
+| **本地**（`python checkin.py`） | 是 | 想随时手动跑、看日志 |
+| **青龙面板** | 是（服务器/软路由/NAS） | 已有青龙，想 7×24 |
+| **WPS 云端**（金山文档 AirScript） | **否** | 没服务器、电脑会关机 |
 
 > ⚠️ **安全提示**：脚本内所有 token 均已脱敏（`YOUR_ACCESS_TOKEN_HERE` 等）。凭据通过环境变量或登录态文件注入，
 > **切勿把真实 token 提交到仓库**（`.gitignore` 已挡住各类备份目录与凭据文件）。
@@ -91,7 +99,7 @@ AirScript 云端定时任务里——账号填在表格里，云端每天定时�
 ## 目录结构
 
 ```
-daily-checkin/
+aidaka/
 ├── checkin.py                  # 统一入口（一条命令跑全部平台）
 ├── platforms/                  # 各平台签到脚本（单文件自包含，青龙直接上传）
 │   ├── ima.py
@@ -187,8 +195,10 @@ token 失效怎么办、活动列表为空、Qoder 设备头、TraeWork 设备 I
 
 ### English in brief
 
-`daily-checkin` is a zero-dependency (Python stdlib only) daily check-in toolkit for four AI
-dev-tool platforms — ima, WorkBuddy, Qoder and TraeWork. It supports multi-account check-in
-via QingLong panel or a single unified CLI (`python checkin.py`), plus Windows desktop
-login-state backup/restore switchers. All credentials are injected via environment variables;
+`aidaka` (AI Daka — "daily punch-in") is a zero-dependency (Python stdlib only) daily
+check-in toolkit for four AI dev-tool platforms: ima, WorkBuddy, Qoder and TraeWork.
+Three ways to run it: locally (`python checkin.py`), on a QingLong panel, or entirely
+in the cloud via Kingsoft Docs / WPS AirScript — no server needed, works even when your
+PC is off. Multi-account, idempotent, with Windows desktop login-state backup/restore
+switchers. All credentials are injected via environment variables or the spreadsheet;
 never commit real tokens.

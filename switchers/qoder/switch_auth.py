@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Qoder 登录态备份 / 恢复 / 查看 / 取号 一体脚本（daily-checkin 项目 · Windows 一键版，纯标准库）
+Qoder 登录态备份 / 恢复 / 查看 / 取号 一体脚本（aidaka 项目 · Windows 一键版，纯标准库）
 
 一个脚本搞定:
   - 备份当前桌面端登录态（Qoder 的 auth.v1.dat 是 DPAPI 加密的，同机同用户才能还原）

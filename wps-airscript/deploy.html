@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ai 自动签到 · 金山文档 AirScript 部署页</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1f2328; --muted: #656d76;
+    --line: #d8dee4; --brand: #1a73e8; --brand-dark: #1557b0;
+    --ok: #1a7f37; --code-bg: #0d1117; --code-ink: #c9d1d9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 64px; background: var(--bg); color: var(--ink);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.3px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 22px 24px; margin-bottom: 18px;
+  }
+  h2 { font-size: 17px; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+  .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--brand);
+    color: #fff; font-size: 12px; font-weight: 600; flex: none;
+  }
+  ol { margin: 0; padding-left: 22px; }
+  ol li { margin: 7px 0; }
+  a { color: var(--brand); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code {
+    background: #eff1f3; border-radius: 5px; padding: 1px 6px;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+    border: 0; border-radius: 9px; padding: 13px 26px; font-size: 15px; font-weight: 600;
+    background: var(--brand); color: #fff; transition: background .15s, transform .06s;
+  }
+  .btn:hover { background: var(--brand-dark); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ok { background: var(--ok); }
+  .btn-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 4px 0 2px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .linkbox {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f0f6ff; border: 1px solid #cfe0ff; border-radius: 9px;
+    padding: 11px 14px; margin: 10px 0 0;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    word-break: break-all;
+  }
+  .linkbox span { flex: 1 1 380px; color: #0b4bb3; }
+  .mini {
+    cursor: pointer; border: 1px solid #9fc0f5; background: #fff; color: var(--brand);
+    border-radius: 7px; padding: 5px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  }
+  .mini:hover { background: #eaf2ff; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 4px 0 2px; table-layout: fixed; }
+  th, td { border: 1px solid var(--line); padding: 8px 11px; text-align: left; vertical-align: top; word-break: break-all; }
+  th:first-child, td:first-child { width: 128px; }
+  td code { word-break: break-all; }
+  th { background: #f6f8fa; font-weight: 600; white-space: nowrap; }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; color: var(--brand); font-weight: 600; font-size: 14px; }
+  pre {
+    margin: 12px 0 0; padding: 16px 18px; border-radius: 10px; overflow: auto;
+    max-height: 420px; background: var(--code-bg); color: var(--code-ink);
+    font: 12.5px/1.6 ui-monospace, SFMono-Regular, Consolas, "Courier New", monospace;
+    tab-size: 2;
+  }
+  .warn {
+    background: #fff8e6; border: 1px solid #f0d48a; border-radius: 10px;
+    padding: 14px 18px; margin: 0 0 18px; font-size: 14px;
+  }
+  .warn b { color: #8a6100; }
+  ul { margin: 6px 0 0; padding-left: 20px; }
+  ul li { margin: 5px 0; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ai 自动签到 · AirScript 部署页</h1>
+  <p class="sub">零服务器：把 ima / WorkBuddy / Qoder / TraeWork 四个平台的每日签到交给金山文档云端定时执行。</p>
+
+  <div class="warn">
+    <b>先读这条：</b>账号 token 会明文存在表格里，而模板是「免登录可编辑」链接。
+    填完账号后请把文档权限改成「仅指定人可编辑」，<b>不要把这个表格链接发给别人</b>。
+  </div>
+
+  <div class="card">
+    <h2><span class="num">1</span>复制模板表格</h2>
+    <p style="margin:0">打开下面这个空白模板，右上角「…」→ 另存为 / 创建副本，存到你自己的金山文档空间。</p>
+    <div class="linkbox">
+      <span id="tplurl">https://www.kdocs.cn/l/ckNJ04YURB8F</span>
+      <button class="mini" onclick="copyTpl(this)">复制链接</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">2</span>复制脚本，粘进 AirScript 编辑器</h2>
+    <ol>
+      <li>表格里点顶部菜单 <code>效率</code> → <code>高级开发</code> → <code>AirScript 脚本编辑器</code></li>
+      <li>编辑器工具栏点「服务 / 立方体图标」→ 确认已有 <code>网络API</code>（没有就点「添加服务」加上）</li>
+      <li>清空编辑器里的示例代码，点下面按钮复制，<code>Ctrl+V</code> 粘贴进去</li>
+      <li>点保存（<code>Ctrl+S</code>），点运行（▶），首次会弹「服务授权」→ 选 <b>允许</b></li>
+    </ol>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn" id="copyBtn" onclick="copyScript()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span id="copyLabel">复制脚本（518 行）</span>
+      </button>
+      <span class="hint">粘贴后直接能跑，不用改任何一行</span>
+    </div>
+    <details>
+      <summary>展开预览脚本全文</summary>
+      <pre id="src">// ============================================================
+// ai自动签到 - 四平台每日签到 (AirScript 版)
+//
+// 来源: daily-checkin / wps-airscript/checkin.js
+// 说明文档: wps-airscript/README.md    部署页: wps-airscript/deploy.html
+// 模板表格: https://www.kdocs.cn/l/ckNJ04YURB8F
+//
+// 依赖服务: 网络API (编辑器工具栏 → 服务 → 网络API，已添加则忽略)
+// 定时任务: 效率 → 高级开发 → 定时任务，建议「每天 10:30」
+//           (Qoder 领取窗口每天 10:00 才开，别早于 10 点)
+//
+// 表格布局（工作表「签到配置」）:
+//   A=平台  B=账号JSON  C=是否签到(脚本写入)  D=Server酱  E=PushPlus
+//   F=企业微信Webhook  G=签到结果(脚本写入)
+//
+// 账号JSON 格式（B列，一行一个账号，平台名填在A列）:
+//   ima:       {"ima_uid":"","uid_type":"1","ima_guid":"","refresh_token":"","name":""}
+//   workbuddy: {"token":"","uid":"","name":""}
+//   qoder:     {"name":"","refreshToken":"","accessToken":"","uid":"","device":{"clientType":"10","machineOS":"Windows","machineHostname":"","machineId":"","machineToken":"","machineCode":"","machineType":"","version":""}}
+//   traework:  {"token":"","uid":"","device_id":"","name":""}
+//
+// 说明: 各平台接口幂等，已签到会返回"今天已签到"，可放心一天多次运行。
+// ============================================================
+
+// ---------- 基础工具 ----------
+function pad2(n) { return (n &lt; 10 ? "0" : "") + n; }
+
+// 固定输出北京时间，避免云端时区差异
+function nowBJ() {
+  var d = new Date(Date.now() + 8 * 3600 * 1000);
+  return d.getUTCFullYear() + "-" + pad2(d.getUTCMonth() + 1) + "-" + pad2(d.getUTCDate()) +
+    " " + pad2(d.getUTCHours()) + ":" + pad2(d.getUTCMinutes()) + ":" + pad2(d.getUTCSeconds());
+}
+
+function sleep(ms) {
+  var start = Date.now();
+  while (Date.now() - start &lt; ms) { /* 同步等待 */ }
+}
+
+// ---------- HTTP 封装（AirScript 网络API，同步返回） ----------
+function httpReq(method, url, headers, body, timeout) {
+  timeout = timeout || 30000;
+  var opts = { method: method, headers: headers || {}, timeout: timeout };
+  if (body !== null &amp;&amp; body !== undefined) opts.body = body;
+  if (typeof HTTP !== "undefined" &amp;&amp; typeof HTTP.fetch === "function") {
+    return HTTP.fetch(url, opts);
+  }
+  if (typeof HTTP !== "undefined" &amp;&amp; typeof HTTP.get === "function" &amp;&amp; method === "GET") {
+    return HTTP.get(url, { headers: headers || {} });
+  }
+  if (typeof HTTP !== "undefined" &amp;&amp; typeof HTTP.post === "function" &amp;&amp; method === "POST") {
+    return HTTP.post(url, { headers: headers || {}, body: body });
+  }
+  throw new Error("HTTP 对象不可用，请在编辑器工具栏→服务→添加「网络API」");
+}
+
+function respStatus(resp) {
+  if (!resp) return 0;
+  if (resp.status !== undefined &amp;&amp; resp.status !== null) return resp.status;
+  if (resp.statusCode !== undefined &amp;&amp; resp.statusCode !== null) return resp.statusCode;
+  return 0;
+}
+
+function respText(resp) {
+  var txt = "";
+  try { txt = resp.text(); } catch (e) { }
+  if (txt === null || txt === undefined) txt = "";
+  return String(txt);
+}
+
+// 统一取 JSON：优先 json()，失败则解析 text()
+function respJson(resp) {
+  try {
+    var j = resp.json();
+    if (j !== null &amp;&amp; j !== undefined) return j;
+  } catch (e) { }
+  var txt = respText(resp);
+  if (!txt) return {};
+  try { return JSON.parse(txt); } catch (e) { return { raw: txt.slice(0, 300) }; }
+}
+
+// ---------- 表格读写 ----------
+function getSheet() {
+  try { return Application.Sheets.Item("签到配置"); } catch (e) { return Application.ActiveSheet; }
+}
+
+function readCell(sheet, addr) {
+  try {
+    var v = sheet.Range(addr).Text;
+    if (v === null || v === undefined) v = sheet.Range(addr).Value2;
+    return v === null || v === undefined ? "" : String(v);
+  } catch (e) { return ""; }
+}
+
+function writeCell(sheet, addr, val) {
+  try { sheet.Range(addr).Value2 = val; return true; }
+  catch (e) { console.log("[警告] 写单元格 " + addr + " 失败: " + e); return false; }
+}
+
+// ---------- 推送 ----------
+function sendNotify(sct, pp, wx, title, text) {
+  var sent = [];
+  if (sct) {
+    try {
+      var r = httpReq("POST", "https://sctapi.ftqq.com/" + sct + ".send",
+        { "Content-Type": "application/x-www-form-urlencoded" },
+        "title=" + encodeURIComponent(title) + "&amp;desp=" + encodeURIComponent(text));
+      sent.push("Server酱:" + respStatus(r));
+    } catch (e) { sent.push("Server酱失败:" + e); }
+  }
+  if (pp) {
+    try {
+      var r2 = httpReq("POST", "https://www.pushplus.plus/send",
+        { "Content-Type": "application/json" },
+        JSON.stringify({ token: pp, title: title, content: text }));
+      sent.push("PushPlus:" + respStatus(r2));
+    } catch (e) { sent.push("PushPlus失败:" + e); }
+  }
+  if (wx) {
+    try {
+      var r3 = httpReq("POST", wx,
+        { "Content-Type": "application/json" },
+        JSON.stringify({ msgtype: "text", text: { content: title + "\n" + text } }));
+      sent.push("企业微信:" + respStatus(r3));
+    } catch (e) { sent.push("企业微信失败:" + e); }
+  }
+  return sent.join(" ");
+}
+
+// ---------- ima（腾讯AI工作台） ----------
+function toInt32(v) {
+  v = v &amp; 0xFFFFFFFF;
+  return v &gt;= 0x80000000 ? v - 0x100000000 : v;
+}
+
+// 复刻 ima 页面 JS 的 djb2 签名，输出 x-ima-bkn 头
+function bkn(token) {
+  var result = 5381;
+  for (var i = 0; i &lt; token.length; i++) {
+    result = toInt32(result + toInt32(toInt32(result) &lt;&lt; 5) + token.charCodeAt(i));
+  }
+  return toInt32(result) &amp; 0x7FFFFFFF;
+}
+
+function imaCheckin(acc) {
+  var BASE = "https://ima.qq.com";
+  // 1) refresh_token 换 access_token（2小时有效）
+  var refreshBody = JSON.stringify({
+    userId: acc.ima_uid || "",
+    refreshToken: acc.refresh_token || "",
+    tokenType: -1
+  });
+  var refreshHeaders = {
+    "Content-Type": "application/json",
+    "from_browser_ima": "1",
+    "extension_version": "5.17.2",
+    "x-ima-cookie": "IMA-GUID=" + (acc.ima_guid || "") + "; PLATFORM=H5"
+  };
+  var r1 = httpReq("POST", BASE + "/cgi-bin/auth_login/refresh", refreshHeaders, refreshBody);
+  var d1 = respJson(r1);
+  var token = d1.token || "";
+  if (d1.code !== 0 || !token) {
+    return { status: "error", action: "refresh_failed",
+      msg: "刷新登录失败 code=" + d1.code + " msg=" + (d1.msg || "") + "（refresh_token 可能已失效，需重新提取）" };
+  }
+
+  // 2) 带签名的鉴权头
+  var cookieParts = [
+    "IMA-UID=" + (acc.ima_uid || ""),
+    "IMA-TOKEN=" + token,
+    "IMA-REFRESH-TOKEN=" + (acc.refresh_token || ""),
+    "UID-TYPE=" + (acc.uid_type || "1"),
+    "IMA-GUID=" + (acc.ima_guid || ""),
+    "PLATFORM=H5"
+  ];
+  function authHeaders() {
+    return {
+      "Content-Type": "application/json",
+      "from_browser_ima": "1",
+      "extension_version": "5.17.2",
+      "x-ima-cookie": cookieParts.join("; "),
+      "x-ima-bkn": String(bkn(token))
+    };
+  }
+
+  // 3) 查询活动信息
+  var r2 = httpReq("POST", BASE + "/cgi-bin/daily_login_activity/get_activity_info", authHeaders(), "{}");
+  var info = respJson(r2);
+  if (info.code !== 0) {
+    return { status: "error", action: "query_failed",
+      msg: "查询活动失败 code=" + info.code + " msg=" + (info.msg || "") };
+  }
+  var today = null, bonus = null;
+  var infos = info.infos || [];
+  for (var i = 0; i &lt; infos.length; i++) {
+    if (infos[i].top === "今日") today = infos[i];
+    if (infos[i].top === "满签奖励") bonus = infos[i];
+  }
+  if (!today) {
+    return { status: "error", action: "structure_changed", msg: "未找到今日条目，活动可能已改版" };
+  }
+
+  var result = { status: "ok", action: "", msg: "" };
+  var st = today.status;
+  if (st === 3) {           // 可领取
+    var r3 = httpReq("POST", BASE + "/cgi-bin/daily_login_activity/check_in", authHeaders(), JSON.stringify({ type: 1 }));
+    var d3 = respJson(r3);
+    if (d3.code === 0) {
+      result.action = "clicked";
+      result.points = d3.rewardReceived || today.reward;
+      result.msg = "签到成功";
+    } else if (/已签到|请明天/.test(JSON.stringify(d3))) {
+      result.action = "skip_already_signed";
+      result.msg = "今天已签到";
+    } else {
+      result.status = "error";
+      result.action = "checkin_failed";
+      result.msg = "code=" + d3.code + " msg=" + (d3.msg || "");
+    }
+  } else if (st === 2) {    // 已领取
+    result.action = "skip_already_signed";
+    result.msg = "今天已签到";
+  } else {
+    result.action = "not_available";
+    result.msg = "今天不可签到 (status=" + st + ")";
+  }
+
+  // 4) 满签奖励（连签7天）自动顺带领取
+  if (bonus &amp;&amp; bonus.status === 3) {
+    var r4 = httpReq("POST", BASE + "/cgi-bin/daily_login_activity/check_in", authHeaders(), JSON.stringify({ type: 2 }));
+    var d4 = respJson(r4);
+    if (d4.code === 0) result.msg += "；满签奖励已领取";
+  }
+  return result;
+}
+
+// ---------- WorkBuddy（腾讯 CodeBuddy） ----------
+function wbCheckin(acc) {
+  var BASE = "https://www.codebuddy.cn";
+  var headers = {
+    "Authorization": "Bearer " + (acc.token || ""),
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) WorkBuddyCheckin/1.0",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": BASE,
+    "Referer": BASE + "/"
+  };
+  var r = httpReq("POST", BASE + "/v2/billing/meter/daily-checkin", headers, "{}");
+  var st = respStatus(r);
+  var body = respJson(r);
+  var text = JSON.stringify(body);
+  var msg = body.msg || "";
+  if (/已签到|明天再来|请明天|already/i.test(text)) {
+    return { status: "ok", action: "skip_already_signed", msg: msg || "今天已签到" };
+  }
+  var code = body.code;
+  var data = body.data || {};
+  if (code === 0 || /^(OK|SUCCESS)$/i.test(msg) || /成功/.test(msg)) {
+    var points = (data &amp;&amp; (data.credit || data.points || data.point || data.reward)) || body.points || body.reward;
+    return { status: "ok", action: "clicked", points: points, msg: msg || "领取成功" };
+  }
+  return { status: "error", action: "checkin_failed", msg: "HTTP " + st + " " + text.slice(0, 300) };
+}
+
+// ---------- Qoder（CN 个人版） ----------
+function qoderCheckin(acc) {
+  var BASE = (acc.base || "https://openapi.qoder.com.cn").replace(/\/$/, "");
+  var COSY = {
+    clientType: "Cosy-ClientType",
+    machineOS: "Cosy-MachineOS",
+    machineHostname: "Cosy-MachineHostname",
+    machineId: "Cosy-MachineId",
+    machineToken: "Cosy-MachineToken",
+    machineCode: "Cosy-MachineCode",
+    machineType: "Cosy-MachineType",
+    version: "Cosy-Version"
+  };
+  var device = acc.device || {};
+  if (!device.machineToken) {
+    return { status: "error", action: "no_device", msg: "缺少设备标识(Cosy-MachineToken)，活动接口不会下发活动" };
+  }
+  function headers(token) {
+    var h = {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "User-Agent": "Qoder/claim"
+    };
+    for (var k in COSY) {
+      if (device[k] !== undefined &amp;&amp; device[k] !== null &amp;&amp; String(device[k]) !== "") {
+        h[COSY[k]] = String(device[k]);
+      }
+    }
+    if (!h["Cosy-ClientType"]) h["Cosy-ClientType"] = "10";
+    if (token) h["Authorization"] = "Bearer " + token;
+    return h;
+  }
+  function refreshToken() {
+    var r = httpReq("POST", BASE + "/api/v1/deviceToken/refresh", headers(null),
+      JSON.stringify({ refresh_token: acc.refreshToken || "" }));
+    var d = respJson(r);
+    if (respStatus(r) !== 200) {
+      return { token: null, err: "刷新失败 HTTP " + respStatus(r) + " " + JSON.stringify(d).slice(0, 200) };
+    }
+    var tk = d.token || d.accessToken || d.access_token || "";
+    if (!tk) return { token: null, err: "刷新响应里没有 token" };
+    acc.accessToken = tk;
+    if (d.refreshToken || d.refresh_token) acc.refreshToken = d.refreshToken || d.refresh_token;
+    return { token: tk, err: "" };
+  }
+
+  var token = acc.accessToken || acc.token || "";
+  if (!token) {
+    var rf = refreshToken();
+    if (!rf.token) return { status: "error", action: "token_expired", msg: rf.err };
+    token = rf.token;
+  }
+
+  var r = httpReq("GET", BASE + "/sash/api/v1/me/campaigns", headers(token), null);
+  var st = respStatus(r);
+  var data = respJson(r);
+  if (st === 401) {
+    var rf2 = refreshToken();
+    if (!rf2.token) return { status: "error", action: "token_expired", msg: rf2.err };
+    token = rf2.token;
+    r = httpReq("GET", BASE + "/sash/api/v1/me/campaigns", headers(token), null);
+    st = respStatus(r);
+    data = respJson(r);
+  }
+  if (st !== 200) {
+    return { status: "error", action: "campaign_failed", msg: "HTTP " + st + " " + JSON.stringify(data).slice(0, 300) };
+  }
+  var campaigns = data.campaigns || [];
+  if (!campaigns.length) {
+    return { status: "ok", action: "no_campaign",
+      msg: "活动列表为空：可能未到10:00窗口、活动已下线，或设备头与客户端版本不符" };
+  }
+
+  var now = Date.now();
+  var UNCLAIMED = ["UNCLAIMED", "NOT_CLAIMED", "PENDING", "AVAILABLE", "CLAIMABLE"];
+  var pending = [];
+  for (var i = 0; i &lt; campaigns.length; i++) {
+    var c = campaigns[i];
+    if (!c.campaignId) continue;
+    var cst = String(c.claimStatus || "").toUpperCase();
+    if (cst === "CLAIMED") continue;
+    var start = c.startAt || 0, end = c.endAt || 0;
+    var inWindow = (!start || now &gt;= start) &amp;&amp; (!end || now &lt;= end);
+    if (UNCLAIMED.indexOf(cst) &gt;= 0 || (inWindow &amp;&amp; !cst)) pending.push(c);
+  }
+  if (!pending.length) {
+    return { status: "ok", action: "skip_already_claimed", msg: "本轮已领" };
+  }
+
+  var gained = 0, failed = [];
+  for (var j = 0; j &lt; pending.length; j++) {
+    var c2 = pending[j];
+    var key = c2.campaignKey || c2.campaignId;
+    var expect = (c2.benefit || {}).amount || 0;
+    var r2 = httpReq("POST", BASE + "/sash/api/v1/me/campaigns/" + c2.campaignId + "/claim", headers(token), "{}");
+    var st2 = respStatus(r2);
+    var d2 = respJson(r2);
+    if (st2 === 401) {
+      var rf3 = refreshToken();
+      if (!rf3.token) { failed.push(key + ":token失效"); break; }
+      token = rf3.token;
+      r2 = httpReq("POST", BASE + "/sash/api/v1/me/campaigns/" + c2.campaignId + "/claim", headers(token), "{}");
+      st2 = respStatus(r2);
+      d2 = respJson(r2);
+    }
+    var claimStatus = String(d2.status || "").toUpperCase();
+    if (st2 === 200 &amp;&amp; ["CLAIMED", "REPLAYED", "SUCCESS"].indexOf(claimStatus) &gt;= 0) {
+      if (d2.replayed) continue;   // 服务端认为已领，业务正常
+      gained += Number((d2.benefit || {}).amount || expect || 0);
+    } else {
+      failed.push(key + ":HTTP" + st2 + " " + JSON.stringify(d2).slice(0, 120));
+    }
+  }
+  if (failed.length) {
+    return { status: gained &gt; 0 ? "ok" : "error", action: "claim_failed",
+      msg: failed.join("; ") + (gained ? "（已领 " + gained + " Credits）" : "") };
+  }
+  return { status: "ok", action: "clicked", credits: gained, msg: "领取成功 " + gained + " Credits" };
+}
+
+// ---------- TraeWork（国内个人版） ----------
+function traeworkCheckin(acc) {
+  var BASE = "https://api.trae.cn";
+  var token = acc.token || "";
+  var deviceId = acc.device_id || "";
+  function headers() {
+    return {
+      "Authorization": "Cloud-IDE-JWT " + token,
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TraeWorkCheckin/1.0",
+      "X-User-Region": "CN",
+      "x-device-id": deviceId
+    };
+  }
+  // 1) 查状态（幂等）
+  var r = httpReq("POST", BASE + "/trae/api/v2/ug/checkin_credits/status", headers(), JSON.stringify({ req_source: 2 }));
+  var st = respStatus(r);
+  var status = respJson(r);
+  if (st !== 200 || status.checked_in === undefined) {
+    return { status: "error", action: "query_failed",
+      msg: "查询签到状态失败（HTTP " + st + "）：" + (status.message || JSON.stringify(status).slice(0, 200)) };
+  }
+  if (status.checked_in) {
+    return { status: "ok", action: "skip_already_signed", msg: "今天已签到", credits: status.credits };
+  }
+  if (status.enable === false) {
+    return { status: "ok", action: "disabled", msg: "该账号未开启签到功能" };
+  }
+  // 2) 领取（9074 服务端繁忙自动重试）
+  for (var attempt = 0; attempt &lt; 4; attempt++) {
+    var r2 = httpReq("POST", BASE + "/trae/api/v2/ug/checkin_credits/claim", headers(), JSON.stringify({ req_source: 2 }));
+    var st2 = respStatus(r2);
+    var resp = respJson(r2);
+    if (st2 === 200 &amp;&amp; resp.code === 0) {
+      var data = resp.data || {};
+      return { status: "ok", action: "clicked",
+        credits: data.credits !== undefined ? data.credits : status.credits,
+        msg: resp.message || "签到成功" };
+    }
+    var bizCode = resp.code;
+    var msg = resp.message || JSON.stringify(resp);
+    if (bizCode === 9074 &amp;&amp; attempt &lt; 3) { sleep(5000); continue; }
+    var m = "签到失败（HTTP " + st2 + "）：" + msg;
+    if (bizCode === 9074) m += "（服务端繁忙，已重试多次）";
+    if (bizCode === 9004) m += "；请重新获取带设备ID的账号配置";
+    return { status: "error", action: "claim_failed", msg: m };
+  }
+  return { status: "error", action: "claim_failed", msg: "重试后仍失败" };
+}
+
+// ---------- 主流程 ----------
+function main() {
+  var sheet = getSheet();
+  var rows = [];
+  var MAXROW = 30;
+  for (var r = 2; r &lt;= MAXROW; r++) {
+    var platform = readCell(sheet, "A" + r).replace(/^\s+|\s+$/g, "").toLowerCase();
+    if (!platform) continue;
+    var accountJson = readCell(sheet, "B" + r).replace(/^\s+|\s+$/g, "");
+    if (!accountJson) continue;
+    var acc;
+    try { acc = JSON.parse(accountJson); }
+    catch (e) {
+      writeCell(sheet, "G" + r, "账号JSON解析失败: " + e);
+      continue;
+    }
+    var origToken = acc.accessToken || acc.token || "";
+    var sct = readCell(sheet, "D" + r).replace(/^\s+|\s+$/g, "");
+    var pp = readCell(sheet, "E" + r).replace(/^\s+|\s+$/g, "");
+    var wx = readCell(sheet, "F" + r).replace(/^\s+|\s+$/g, "");
+
+    var res;
+    try {
+      if (platform === "ima") res = imaCheckin(acc);
+      else if (platform === "workbuddy") res = wbCheckin(acc);
+      else if (platform === "qoder") res = qoderCheckin(acc);
+      else if (platform === "traework") res = traeworkCheckin(acc);
+      else res = { status: "error", action: "unknown_platform", msg: "未知平台: " + platform };
+    } catch (e) {
+      res = { status: "error", action: "exception", msg: String(e).slice(0, 200) };
+    }
+
+    // token 轮换后写回 B 列（qoder）
+    var newToken = acc.accessToken || acc.token || "";
+    if (platform === "qoder" &amp;&amp; newToken &amp;&amp; newToken !== origToken) {
+      try {
+        writeCell(sheet, "B" + r, JSON.stringify(acc));
+        console.log("[" + platform + "] token 已刷新并写回 B" + r);
+      } catch (e) { console.log("[警告] token 写回失败: " + e); }
+    }
+
+    // 写运行时间与结果
+    writeCell(sheet, "C" + r, nowBJ());
+    var name = acc.name || acc.uid || acc.remark || "";
+    var detail = "[" + platform + "] " + name + " " + res.action + ": " + (res.msg || "");
+    if (res.points !== undefined &amp;&amp; res.points !== null) detail += " (+" + res.points + ")";
+    if (res.credits !== undefined &amp;&amp; res.credits !== null) detail += " (" + res.credits + " Credits)";
+    writeCell(sheet, "G" + r, detail.slice(0, 500));
+    console.log(detail);
+
+    rows.push({ platform: platform, name: name, res: res, sct: sct, pp: pp, wx: wx });
+    sleep(1500);   // 账号间间隔，降低风控
+  }
+
+  if (!rows.length) {
+    console.log("没有读取到任何账号（A列平台名 + B列账号JSON）");
+    return;
+  }
+
+  // 汇总推送（按推送渠道配置去重）
+  var channels = {};
+  for (var i = 0; i &lt; rows.length; i++) {
+    var row = rows[i];
+    if (!row.sct &amp;&amp; !row.pp &amp;&amp; !row.wx) continue;
+    var key = row.sct + "|" + row.pp + "|" + row.wx;
+    if (!channels[key]) channels[key] = { sct: row.sct, pp: row.pp, wx: row.wx, lines: [] };
+    var line = "[" + row.platform + "] " + row.name + " → " + row.res.action + ": " + (row.res.msg || "");
+    channels[key].lines.push(line);
+  }
+  var okCount = 0, errCount = 0;
+  for (var m = 0; m &lt; rows.length; m++) {
+    if (rows[m].res.status === "ok") okCount++; else errCount++;
+  }
+  var title = "ai自动签到 " + nowBJ().slice(0, 10) + "（正常" + okCount + "/异常" + errCount + "）";
+  for (var k in channels) {
+    var ch = channels[k];
+    var r = sendNotify(ch.sct, ch.pp, ch.wx, title, ch.lines.join("\n"));
+    console.log("推送结果: " + r);
+  }
+  console.log("=== 完成: 正常 " + okCount + " 个, 异常 " + errCount + " 个 ===");
+}
+
+main();
+</pre>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">3</span>把账号填进表格 B 列</h2>
+    <p style="margin:0 0 10px">A 列填平台名（小写），B 列填该平台的账号 JSON，一行一个账号：</p>
+    <table>
+      <tr><th>平台（A 列）</th><th>账号 JSON（B 列）</th></tr>
+      <tr><td><code>ima</code></td><td><code>{"ima_uid":"","uid_type":"1","ima_guid":"","refresh_token":"","name":""}</code></td></tr>
+      <tr><td><code>workbuddy</code></td><td><code>{"token":"","uid":"","name":""}</code></td></tr>
+      <tr><td><code>qoder</code></td><td><code>{"name":"","refreshToken":"","accessToken":"","uid":"","device":{"clientType":"10","machineOS":"Windows","machineHostname":"","machineId":"","machineToken":"","machineCode":"","machineType":"","version":""}}</code></td></tr>
+      <tr><td><code>traework</code></td><td><code>{"token":"","uid":"","device_id":"","name":""}</code></td></tr>
+    </table>
+    <p class="hint" style="margin:12px 0 0">
+      D / E / F 列可填 Server酱 SendKey、PushPlus token、企业微信机器人 Webhook，跑完自动推送汇总；不填就不推送。
+      账号行从本仓库 <code>switchers/&lt;平台&gt;/switch_auth.py show</code> 取自本机登录态，别手抄。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">4</span>挂上每日定时</h2>
+    <ol>
+      <li><code>效率</code> → <code>高级开发</code> → <code>定时任务</code> → 创建任务</li>
+      <li>频率选 <b>每天</b>，时间建议 <b>10:30</b> 之后（Qoder 的活动 10:00 才开新一轮窗口，更早跑会撞到前一天）</li>
+      <li>执行脚本选刚保存的那个，确认即可。之后关掉电脑也会照常跑</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>运维要点</h2>
+    <ul>
+      <li>各平台接口都是<b>幂等</b>的：已签到会返回「今天已签到」，一天跑多次不会重复领，放心补跑。</li>
+      <li><b>Qoder</b>：token 快过期会自动刷新，并把新 token <b>回写 B 列</b>，不用管。</li>
+      <li><b>WorkBuddy</b>：token 约 60 天过期，过期后签到报鉴权失败，换掉 B 列那个 JSON 里的 <code>token</code> 即可。</li>
+      <li><b>ima</b>：用 refresh_token 每次现换 access_token，只要 refresh_token 不失效就不用管。</li>
+      <li><b>TraeWork</b>：JWT 约两周过期，过期后用 switcher 重新取一行。</li>
+      <li>结果写在 G 列（最近一次动作 + 消息），C 列写脚本运行时间，方便回看有没有漏跑。</li>
+    </ul>
+  </div>
+
+  <footer>
+    脚本源文件同目录 <code>checkin.js</code>，本页面由 <code>build.py</code> 从它生成，改脚本后重跑即可刷新。
+  </footer>
+</div>
+
+<script>
+const SCRIPT = "// ============================================================\n// ai自动签到 - 四平台每日签到 (AirScript 版)\n//\n// 来源: daily-checkin / wps-airscript/checkin.js\n// 说明文档: wps-airscript/README.md    部署页: wps-airscript/deploy.html\n// 模板表格: https://www.kdocs.cn/l/ckNJ04YURB8F\n//\n// 依赖服务: 网络API (编辑器工具栏 → 服务 → 网络API，已添加则忽略)\n// 定时任务: 效率 → 高级开发 → 定时任务，建议「每天 10:30」\n//           (Qoder 领取窗口每天 10:00 才开，别早于 10 点)\n//\n// 表格布局（工作表「签到配置」）:\n//   A=平台  B=账号JSON  C=是否签到(脚本写入)  D=Server酱  E=PushPlus\n//   F=企业微信Webhook  G=签到结果(脚本写入)\n//\n// 账号JSON 格式（B列，一行一个账号，平台名填在A列）:\n//   ima:       {\"ima_uid\":\"\",\"uid_type\":\"1\",\"ima_guid\":\"\",\"refresh_token\":\"\",\"name\":\"\"}\n//   workbuddy: {\"token\":\"\",\"uid\":\"\",\"name\":\"\"}\n//   qoder:     {\"name\":\"\",\"refreshToken\":\"\",\"accessToken\":\"\",\"uid\":\"\",\"device\":{\"clientType\":\"10\",\"machineOS\":\"Windows\",\"machineHostname\":\"\",\"machineId\":\"\",\"machineToken\":\"\",\"machineCode\":\"\",\"machineType\":\"\",\"version\":\"\"}}\n//   traework:  {\"token\":\"\",\"uid\":\"\",\"device_id\":\"\",\"name\":\"\"}\n//\n// 说明: 各平台接口幂等，已签到会返回\"今天已签到\"，可放心一天多次运行。\n// ============================================================\n\n// ---------- 基础工具 ----------\nfunction pad2(n) { return (n < 10 ? \"0\" : \"\") + n; }\n\n// 固定输出北京时间，避免云端时区差异\nfunction nowBJ() {\n  var d = new Date(Date.now() + 8 * 3600 * 1000);\n  return d.getUTCFullYear() + \"-\" + pad2(d.getUTCMonth() + 1) + \"-\" + pad2(d.getUTCDate()) +\n    \" \" + pad2(d.getUTCHours()) + \":\" + pad2(d.getUTCMinutes()) + \":\" + pad2(d.getUTCSeconds());\n}\n\nfunction sleep(ms) {\n  var start = Date.now();\n  while (Date.now() - start < ms) { /* 同步等待 */ }\n}\n\n// ---------- HTTP 封装（AirScript 网络API，同步返回） ----------\nfunction httpReq(method, url, headers, body, timeout) {\n  timeout = timeout || 30000;\n  var opts = { method: method, headers: headers || {}, timeout: timeout };\n  if (body !== null && body !== undefined) opts.body = body;\n  if (typeof HTTP !== \"undefined\" && typeof HTTP.fetch === \"function\") {\n    return HTTP.fetch(url, opts);\n  }\n  if (typeof HTTP !== \"undefined\" && typeof HTTP.get === \"function\" && method === \"GET\") {\n    return HTTP.get(url, { headers: headers || {} });\n  }\n  if (typeof HTTP !== \"undefined\" && typeof HTTP.post === \"function\" && method === \"POST\") {\n    return HTTP.post(url, { headers: headers || {}, body: body });\n  }\n  throw new Error(\"HTTP 对象不可用，请在编辑器工具栏→服务→添加「网络API」\");\n}\n\nfunction respStatus(resp) {\n  if (!resp) return 0;\n  if (resp.status !== undefined && resp.status !== null) return resp.status;\n  if (resp.statusCode !== undefined && resp.statusCode !== null) return resp.statusCode;\n  return 0;\n}\n\nfunction respText(resp) {\n  var txt = \"\";\n  try { txt = resp.text(); } catch (e) { }\n  if (txt === null || txt === undefined) txt = \"\";\n  return String(txt);\n}\n\n// 统一取 JSON：优先 json()，失败则解析 text()\nfunction respJson(resp) {\n  try {\n    var j = resp.json();\n    if (j !== null && j !== undefined) return j;\n  } catch (e) { }\n  var txt = respText(resp);\n  if (!txt) return {};\n  try { return JSON.parse(txt); } catch (e) { return { raw: txt.slice(0, 300) }; }\n}\n\n// ---------- 表格读写 ----------\nfunction getSheet() {\n  try { return Application.Sheets.Item(\"签到配置\"); } catch (e) { return Application.ActiveSheet; }\n}\n\nfunction readCell(sheet, addr) {\n  try {\n    var v = sheet.Range(addr).Text;\n    if (v === null || v === undefined) v = sheet.Range(addr).Value2;\n    return v === null || v === undefined ? \"\" : String(v);\n  } catch (e) { return \"\"; }\n}\n\nfunction writeCell(sheet, addr, val) {\n  try { sheet.Range(addr).Value2 = val; return true; }\n  catch (e) { console.log(\"[警告] 写单元格 \" + addr + \" 失败: \" + e); return false; }\n}\n\n// ---------- 推送 ----------\nfunction sendNotify(sct, pp, wx, title, text) {\n  var sent = [];\n  if (sct) {\n    try {\n      var r = httpReq(\"POST\", \"https://sctapi.ftqq.com/\" + sct + \".send\",\n        { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n        \"title=\" + encodeURIComponent(title) + \"&desp=\" + encodeURIComponent(text));\n      sent.push(\"Server酱:\" + respStatus(r));\n    } catch (e) { sent.push(\"Server酱失败:\" + e); }\n  }\n  if (pp) {\n    try {\n      var r2 = httpReq(\"POST\", \"https://www.pushplus.plus/send\",\n        { \"Content-Type\": \"application/json\" },\n        JSON.stringify({ token: pp, title: title, content: text }));\n      sent.push(\"PushPlus:\" + respStatus(r2));\n    } catch (e) { sent.push(\"PushPlus失败:\" + e); }\n  }\n  if (wx) {\n    try {\n      var r3 = httpReq(\"POST\", wx,\n        { \"Content-Type\": \"application/json\" },\n        JSON.stringify({ msgtype: \"text\", text: { content: title + \"\\n\" + text } }));\n      sent.push(\"企业微信:\" + respStatus(r3));\n    } catch (e) { sent.push(\"企业微信失败:\" + e); }\n  }\n  return sent.join(\" \");\n}\n\n// ---------- ima（腾讯AI工作台） ----------\nfunction toInt32(v) {\n  v = v & 0xFFFFFFFF;\n  return v >= 0x80000000 ? v - 0x100000000 : v;\n}\n\n// 复刻 ima 页面 JS 的 djb2 签名，输出 x-ima-bkn 头\nfunction bkn(token) {\n  var result = 5381;\n  for (var i = 0; i < token.length; i++) {\n    result = toInt32(result + toInt32(toInt32(result) << 5) + token.charCodeAt(i));\n  }\n  return toInt32(result) & 0x7FFFFFFF;\n}\n\nfunction imaCheckin(acc) {\n  var BASE = \"https://ima.qq.com\";\n  // 1) refresh_token 换 access_token（2小时有效）\n  var refreshBody = JSON.stringify({\n    userId: acc.ima_uid || \"\",\n    refreshToken: acc.refresh_token || \"\",\n    tokenType: -1\n  });\n  var refreshHeaders = {\n    \"Content-Type\": \"application/json\",\n    \"from_browser_ima\": \"1\",\n    \"extension_version\": \"5.17.2\",\n    \"x-ima-cookie\": \"IMA-GUID=\" + (acc.ima_guid || \"\") + \"; PLATFORM=H5\"\n  };\n  var r1 = httpReq(\"POST\", BASE + \"/cgi-bin/auth_login/refresh\", refreshHeaders, refreshBody);\n  var d1 = respJson(r1);\n  var token = d1.token || \"\";\n  if (d1.code !== 0 || !token) {\n    return { status: \"error\", action: \"refresh_failed\",\n      msg: \"刷新登录失败 code=\" + d1.code + \" msg=\" + (d1.msg || \"\") + \"（refresh_token 可能已失效，需重新提取）\" };\n  }\n\n  // 2) 带签名的鉴权头\n  var cookieParts = [\n    \"IMA-UID=\" + (acc.ima_uid || \"\"),\n    \"IMA-TOKEN=\" + token,\n    \"IMA-REFRESH-TOKEN=\" + (acc.refresh_token || \"\"),\n    \"UID-TYPE=\" + (acc.uid_type || \"1\"),\n    \"IMA-GUID=\" + (acc.ima_guid || \"\"),\n    \"PLATFORM=H5\"\n  ];\n  function authHeaders() {\n    return {\n      \"Content-Type\": \"application/json\",\n      \"from_browser_ima\": \"1\",\n      \"extension_version\": \"5.17.2\",\n      \"x-ima-cookie\": cookieParts.join(\"; \"),\n      \"x-ima-bkn\": String(bkn(token))\n    };\n  }\n\n  // 3) 查询活动信息\n  var r2 = httpReq(\"POST\", BASE + \"/cgi-bin/daily_login_activity/get_activity_info\", authHeaders(), \"{}\");\n  var info = respJson(r2);\n  if (info.code !== 0) {\n    return { status: \"error\", action: \"query_failed\",\n      msg: \"查询活动失败 code=\" + info.code + \" msg=\" + (info.msg || \"\") };\n  }\n  var today = null, bonus = null;\n  var infos = info.infos || [];\n  for (var i = 0; i < infos.length; i++) {\n    if (infos[i].top === \"今日\") today = infos[i];\n    if (infos[i].top === \"满签奖励\") bonus = infos[i];\n  }\n  if (!today) {\n    return { status: \"error\", action: \"structure_changed\", msg: \"未找到今日条目，活动可能已改版\" };\n  }\n\n  var result = { status: \"ok\", action: \"\", msg: \"\" };\n  var st = today.status;\n  if (st === 3) {           // 可领取\n    var r3 = httpReq(\"POST\", BASE + \"/cgi-bin/daily_login_activity/check_in\", authHeaders(), JSON.stringify({ type: 1 }));\n    var d3 = respJson(r3);\n    if (d3.code === 0) {\n      result.action = \"clicked\";\n      result.points = d3.rewardReceived || today.reward;\n      result.msg = \"签到成功\";\n    } else if (/已签到|请明天/.test(JSON.stringify(d3))) {\n      result.action = \"skip_already_signed\";\n      result.msg = \"今天已签到\";\n    } else {\n      result.status = \"error\";\n      result.action = \"checkin_failed\";\n      result.msg = \"code=\" + d3.code + \" msg=\" + (d3.msg || \"\");\n    }\n  } else if (st === 2) {    // 已领取\n    result.action = \"skip_already_signed\";\n    result.msg = \"今天已签到\";\n  } else {\n    result.action = \"not_available\";\n    result.msg = \"今天不可签到 (status=\" + st + \")\";\n  }\n\n  // 4) 满签奖励（连签7天）自动顺带领取\n  if (bonus && bonus.status === 3) {\n    var r4 = httpReq(\"POST\", BASE + \"/cgi-bin/daily_login_activity/check_in\", authHeaders(), JSON.stringify({ type: 2 }));\n    var d4 = respJson(r4);\n    if (d4.code === 0) result.msg += \"；满签奖励已领取\";\n  }\n  return result;\n}\n\n// ---------- WorkBuddy（腾讯 CodeBuddy） ----------\nfunction wbCheckin(acc) {\n  var BASE = \"https://www.codebuddy.cn\";\n  var headers = {\n    \"Authorization\": \"Bearer \" + (acc.token || \"\"),\n    \"Content-Type\": \"application/json\",\n    \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) WorkBuddyCheckin/1.0\",\n    \"Accept\": \"application/json, text/plain, */*\",\n    \"Origin\": BASE,\n    \"Referer\": BASE + \"/\"\n  };\n  var r = httpReq(\"POST\", BASE + \"/v2/billing/meter/daily-checkin\", headers, \"{}\");\n  var st = respStatus(r);\n  var body = respJson(r);\n  var text = JSON.stringify(body);\n  var msg = body.msg || \"\";\n  if (/已签到|明天再来|请明天|already/i.test(text)) {\n    return { status: \"ok\", action: \"skip_already_signed\", msg: msg || \"今天已签到\" };\n  }\n  var code = body.code;\n  var data = body.data || {};\n  if (code === 0 || /^(OK|SUCCESS)$/i.test(msg) || /成功/.test(msg)) {\n    var points = (data && (data.credit || data.points || data.point || data.reward)) || body.points || body.reward;\n    return { status: \"ok\", action: \"clicked\", points: points, msg: msg || \"领取成功\" };\n  }\n  return { status: \"error\", action: \"checkin_failed\", msg: \"HTTP \" + st + \" \" + text.slice(0, 300) };\n}\n\n// ---------- Qoder（CN 个人版） ----------\nfunction qoderCheckin(acc) {\n  var BASE = (acc.base || \"https://openapi.qoder.com.cn\").replace(/\\/$/, \"\");\n  var COSY = {\n    clientType: \"Cosy-ClientType\",\n    machineOS: \"Cosy-MachineOS\",\n    machineHostname: \"Cosy-MachineHostname\",\n    machineId: \"Cosy-MachineId\",\n    machineToken: \"Cosy-MachineToken\",\n    machineCode: \"Cosy-MachineCode\",\n    machineType: \"Cosy-MachineType\",\n    version: \"Cosy-Version\"\n  };\n  var device = acc.device || {};\n  if (!device.machineToken) {\n    return { status: \"error\", action: \"no_device\", msg: \"缺少设备标识(Cosy-MachineToken)，活动接口不会下发活动\" };\n  }\n  function headers(token) {\n    var h = {\n      \"Accept\": \"application/json\",\n      \"Content-Type\": \"application/json\",\n      \"User-Agent\": \"Qoder/claim\"\n    };\n    for (var k in COSY) {\n      if (device[k] !== undefined && device[k] !== null && String(device[k]) !== \"\") {\n        h[COSY[k]] = String(device[k]);\n      }\n    }\n    if (!h[\"Cosy-ClientType\"]) h[\"Cosy-ClientType\"] = \"10\";\n    if (token) h[\"Authorization\"] = \"Bearer \" + token;\n    return h;\n  }\n  function refreshToken() {\n    var r = httpReq(\"POST\", BASE + \"/api/v1/deviceToken/refresh\", headers(null),\n      JSON.stringify({ refresh_token: acc.refreshToken || \"\" }));\n    var d = respJson(r);\n    if (respStatus(r) !== 200) {\n      return { token: null, err: \"刷新失败 HTTP \" + respStatus(r) + \" \" + JSON.stringify(d).slice(0, 200) };\n    }\n    var tk = d.token || d.accessToken || d.access_token || \"\";\n    if (!tk) return { token: null, err: \"刷新响应里没有 token\" };\n    acc.accessToken = tk;\n    if (d.refreshToken || d.refresh_token) acc.refreshToken = d.refreshToken || d.refresh_token;\n    return { token: tk, err: \"\" };\n  }\n\n  var token = acc.accessToken || acc.token || \"\";\n  if (!token) {\n    var rf = refreshToken();\n    if (!rf.token) return { status: \"error\", action: \"token_expired\", msg: rf.err };\n    token = rf.token;\n  }\n\n  var r = httpReq(\"GET\", BASE + \"/sash/api/v1/me/campaigns\", headers(token), null);\n  var st = respStatus(r);\n  var data = respJson(r);\n  if (st === 401) {\n    var rf2 = refreshToken();\n    if (!rf2.token) return { status: \"error\", action: \"token_expired\", msg: rf2.err };\n    token = rf2.token;\n    r = httpReq(\"GET\", BASE + \"/sash/api/v1/me/campaigns\", headers(token), null);\n    st = respStatus(r);\n    data = respJson(r);\n  }\n  if (st !== 200) {\n    return { status: \"error\", action: \"campaign_failed\", msg: \"HTTP \" + st + \" \" + JSON.stringify(data).slice(0, 300) };\n  }\n  var campaigns = data.campaigns || [];\n  if (!campaigns.length) {\n    return { status: \"ok\", action: \"no_campaign\",\n      msg: \"活动列表为空：可能未到10:00窗口、活动已下线，或设备头与客户端版本不符\" };\n  }\n\n  var now = Date.now();\n  var UNCLAIMED = [\"UNCLAIMED\", \"NOT_CLAIMED\", \"PENDING\", \"AVAILABLE\", \"CLAIMABLE\"];\n  var pending = [];\n  for (var i = 0; i < campaigns.length; i++) {\n    var c = campaigns[i];\n    if (!c.campaignId) continue;\n    var cst = String(c.claimStatus || \"\").toUpperCase();\n    if (cst === \"CLAIMED\") continue;\n    var start = c.startAt || 0, end = c.endAt || 0;\n    var inWindow = (!start || now >= start) && (!end || now <= end);\n    if (UNCLAIMED.indexOf(cst) >= 0 || (inWindow && !cst)) pending.push(c);\n  }\n  if (!pending.length) {\n    return { status: \"ok\", action: \"skip_already_claimed\", msg: \"本轮已领\" };\n  }\n\n  var gained = 0, failed = [];\n  for (var j = 0; j < pending.length; j++) {\n    var c2 = pending[j];\n    var key = c2.campaignKey || c2.campaignId;\n    var expect = (c2.benefit || {}).amount || 0;\n    var r2 = httpReq(\"POST\", BASE + \"/sash/api/v1/me/campaigns/\" + c2.campaignId + \"/claim\", headers(token), \"{}\");\n    var st2 = respStatus(r2);\n    var d2 = respJson(r2);\n    if (st2 === 401) {\n      var rf3 = refreshToken();\n      if (!rf3.token) { failed.push(key + \":token失效\"); break; }\n      token = rf3.token;\n      r2 = httpReq(\"POST\", BASE + \"/sash/api/v1/me/campaigns/\" + c2.campaignId + \"/claim\", headers(token), \"{}\");\n      st2 = respStatus(r2);\n      d2 = respJson(r2);\n    }\n    var claimStatus = String(d2.status || \"\").toUpperCase();\n    if (st2 === 200 && [\"CLAIMED\", \"REPLAYED\", \"SUCCESS\"].indexOf(claimStatus) >= 0) {\n      if (d2.replayed) continue;   // 服务端认为已领，业务正常\n      gained += Number((d2.benefit || {}).amount || expect || 0);\n    } else {\n      failed.push(key + \":HTTP\" + st2 + \" \" + JSON.stringify(d2).slice(0, 120));\n    }\n  }\n  if (failed.length) {\n    return { status: gained > 0 ? \"ok\" : \"error\", action: \"claim_failed\",\n      msg: failed.join(\"; \") + (gained ? \"（已领 \" + gained + \" Credits）\" : \"\") };\n  }\n  return { status: \"ok\", action: \"clicked\", credits: gained, msg: \"领取成功 \" + gained + \" Credits\" };\n}\n\n// ---------- TraeWork（国内个人版） ----------\nfunction traeworkCheckin(acc) {\n  var BASE = \"https://api.trae.cn\";\n  var token = acc.token || \"\";\n  var deviceId = acc.device_id || \"\";\n  function headers() {\n    return {\n      \"Authorization\": \"Cloud-IDE-JWT \" + token,\n      \"Content-Type\": \"application/json\",\n      \"Accept\": \"application/json\",\n      \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) TraeWorkCheckin/1.0\",\n      \"X-User-Region\": \"CN\",\n      \"x-device-id\": deviceId\n    };\n  }\n  // 1) 查状态（幂等）\n  var r = httpReq(\"POST\", BASE + \"/trae/api/v2/ug/checkin_credits/status\", headers(), JSON.stringify({ req_source: 2 }));\n  var st = respStatus(r);\n  var status = respJson(r);\n  if (st !== 200 || status.checked_in === undefined) {\n    return { status: \"error\", action: \"query_failed\",\n      msg: \"查询签到状态失败（HTTP \" + st + \"）：\" + (status.message || JSON.stringify(status).slice(0, 200)) };\n  }\n  if (status.checked_in) {\n    return { status: \"ok\", action: \"skip_already_signed\", msg: \"今天已签到\", credits: status.credits };\n  }\n  if (status.enable === false) {\n    return { status: \"ok\", action: \"disabled\", msg: \"该账号未开启签到功能\" };\n  }\n  // 2) 领取（9074 服务端繁忙自动重试）\n  for (var attempt = 0; attempt < 4; attempt++) {\n    var r2 = httpReq(\"POST\", BASE + \"/trae/api/v2/ug/checkin_credits/claim\", headers(), JSON.stringify({ req_source: 2 }));\n    var st2 = respStatus(r2);\n    var resp = respJson(r2);\n    if (st2 === 200 && resp.code === 0) {\n      var data = resp.data || {};\n      return { status: \"ok\", action: \"clicked\",\n        credits: data.credits !== undefined ? data.credits : status.credits,\n        msg: resp.message || \"签到成功\" };\n    }\n    var bizCode = resp.code;\n    var msg = resp.message || JSON.stringify(resp);\n    if (bizCode === 9074 && attempt < 3) { sleep(5000); continue; }\n    var m = \"签到失败（HTTP \" + st2 + \"）：\" + msg;\n    if (bizCode === 9074) m += \"（服务端繁忙，已重试多次）\";\n    if (bizCode === 9004) m += \"；请重新获取带设备ID的账号配置\";\n    return { status: \"error\", action: \"claim_failed\", msg: m };\n  }\n  return { status: \"error\", action: \"claim_failed\", msg: \"重试后仍失败\" };\n}\n\n// ---------- 主流程 ----------\nfunction main() {\n  var sheet = getSheet();\n  var rows = [];\n  var MAXROW = 30;\n  for (var r = 2; r <= MAXROW; r++) {\n    var platform = readCell(sheet, \"A\" + r).replace(/^\\s+|\\s+$/g, \"\").toLowerCase();\n    if (!platform) continue;\n    var accountJson = readCell(sheet, \"B\" + r).replace(/^\\s+|\\s+$/g, \"\");\n    if (!accountJson) continue;\n    var acc;\n    try { acc = JSON.parse(accountJson); }\n    catch (e) {\n      writeCell(sheet, \"G\" + r, \"账号JSON解析失败: \" + e);\n      continue;\n    }\n    var origToken = acc.accessToken || acc.token || \"\";\n    var sct = readCell(sheet, \"D\" + r).replace(/^\\s+|\\s+$/g, \"\");\n    var pp = readCell(sheet, \"E\" + r).replace(/^\\s+|\\s+$/g, \"\");\n    var wx = readCell(sheet, \"F\" + r).replace(/^\\s+|\\s+$/g, \"\");\n\n    var res;\n    try {\n      if (platform === \"ima\") res = imaCheckin(acc);\n      else if (platform === \"workbuddy\") res = wbCheckin(acc);\n      else if (platform === \"qoder\") res = qoderCheckin(acc);\n      else if (platform === \"traework\") res = traeworkCheckin(acc);\n      else res = { status: \"error\", action: \"unknown_platform\", msg: \"未知平台: \" + platform };\n    } catch (e) {\n      res = { status: \"error\", action: \"exception\", msg: String(e).slice(0, 200) };\n    }\n\n    // token 轮换后写回 B 列（qoder）\n    var newToken = acc.accessToken || acc.token || \"\";\n    if (platform === \"qoder\" && newToken && newToken !== origToken) {\n      try {\n        writeCell(sheet, \"B\" + r, JSON.stringify(acc));\n        console.log(\"[\" + platform + \"] token 已刷新并写回 B\" + r);\n      } catch (e) { console.log(\"[警告] token 写回失败: \" + e); }\n    }\n\n    // 写运行时间与结果\n    writeCell(sheet, \"C\" + r, nowBJ());\n    var name = acc.name || acc.uid || acc.remark || \"\";\n    var detail = \"[\" + platform + \"] \" + name + \" \" + res.action + \": \" + (res.msg || \"\");\n    if (res.points !== undefined && res.points !== null) detail += \" (+\" + res.points + \")\";\n    if (res.credits !== undefined && res.credits !== null) detail += \" (\" + res.credits + \" Credits)\";\n    writeCell(sheet, \"G\" + r, detail.slice(0, 500));\n    console.log(detail);\n\n    rows.push({ platform: platform, name: name, res: res, sct: sct, pp: pp, wx: wx });\n    sleep(1500);   // 账号间间隔，降低风控\n  }\n\n  if (!rows.length) {\n    console.log(\"没有读取到任何账号（A列平台名 + B列账号JSON）\");\n    return;\n  }\n\n  // 汇总推送（按推送渠道配置去重）\n  var channels = {};\n  for (var i = 0; i < rows.length; i++) {\n    var row = rows[i];\n    if (!row.sct && !row.pp && !row.wx) continue;\n    var key = row.sct + \"|\" + row.pp + \"|\" + row.wx;\n    if (!channels[key]) channels[key] = { sct: row.sct, pp: row.pp, wx: row.wx, lines: [] };\n    var line = \"[\" + row.platform + \"] \" + row.name + \" → \" + row.res.action + \": \" + (row.res.msg || \"\");\n    channels[key].lines.push(line);\n  }\n  var okCount = 0, errCount = 0;\n  for (var m = 0; m < rows.length; m++) {\n    if (rows[m].res.status === \"ok\") okCount++; else errCount++;\n  }\n  var title = \"ai自动签到 \" + nowBJ().slice(0, 10) + \"（正常\" + okCount + \"/异常\" + errCount + \"）\";\n  for (var k in channels) {\n    var ch = channels[k];\n    var r = sendNotify(ch.sct, ch.pp, ch.wx, title, ch.lines.join(\"\\n\"));\n    console.log(\"推送结果: \" + r);\n  }\n  console.log(\"=== 完成: 正常 \" + okCount + \" 个, 异常 \" + errCount + \" 个 ===\");\n}\n\nmain();\n";
+
+async function copyText(text, btn, okLabel) {
+  if (!btn.dataset.orig) btn.dataset.orig = btn.innerHTML;
+  const old = btn.dataset.orig;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    btn.innerHTML = okLabel;
+    btn.classList.add('ok');
+    setTimeout(() => { btn.innerHTML = old; btn.classList.remove('ok'); }, 1800);
+  } catch (e) {
+    alert('复制失败，请手动全选下方脚本复制：\n' + e.message);
+    const pre = document.getElementById('src');
+    if (pre) { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  }
+}
+
+function copyScript() {
+  const btn = document.getElementById('copyBtn');
+  copyText(SCRIPT, btn, '<span>已复制，去编辑器粘贴</span>');
+}
+
+function copyTpl(btn) {
+  copyText(document.getElementById('tplurl').textContent.trim(), btn, '已复制');
+}
+</script>
+</body>
+</html>

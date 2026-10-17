@@ -1,7 +1,7 @@
 # daily-checkin · 每日签到工具箱
 
 一站式自动签到工具集，把 **ima / WorkBuddy / Qoder / TraeWork** 四个平台的每日积分签到收进一个仓库：
-青龙面板多账号签到 + 桌面端登录态备份/切换 + 本机定时，全部纯 Python 标准库实现，**签到脚本零第三方依赖**。
+青龙面板多账号签到 + 桌面端登录态备份/切换 + 本机定时 + **金山文档云端定时（零服务器）**，全部纯 Python 标准库实现，**签到脚本零第三方依赖**。
 
 > ⚠️ **安全提示**：脚本内所有 token 均已脱敏（`YOUR_ACCESS_TOKEN_HERE` 等）。凭据通过环境变量或登录态文件注入，
 > **切勿把真实 token 提交到仓库**（`.gitignore` 已挡住各类备份目录与凭据文件）。
@@ -67,6 +67,27 @@ python platforms/qoder.py
 python platforms/traework.py
 ```
 
+### 方式四：金山文档 AirScript（零服务器，关机也能跑）
+
+不想搭服务器、也不想让电脑常开的话，把这个仓库的签到逻辑跑在**金山文档（WPS）智能表格**的
+AirScript 云端定时任务里——账号填在表格里，云端每天定时执行，结果写回表格。
+
+**👉 部署页（一键复制脚本）**：[wps-airscript/deploy.html](wps-airscript/deploy.html)
+　**说明文档**：[wps-airscript/README.md](wps-airscript/README.md)
+　**模板表格**：[www.kdocs.cn/l/ckNJ04YURB8F](https://www.kdocs.cn/l/ckNJ04YURB8F)
+
+三步走：
+
+1. 打开上面的模板表格，另存一份到自己账号下
+2. 打开部署页点「复制脚本」→ 表格 `效率` → `高级开发` → `AirScript 脚本编辑器` → 粘贴保存
+   （编辑器工具栏「服务」里要确认已添加 **网络API**）
+3. A 列填平台名、B 列填账号 JSON，再挂个「每天 10:30」的定时任务
+
+账号 JSON 格式、推送配置（Server酱 / PushPlus / 企业微信）、排障都在
+[wps-airscript/README.md](wps-airscript/README.md) 里。
+
+> Qoder 的领取窗口每天 10:00 才开，定时别早于 10 点。
+
 ## 目录结构
 
 ```
@@ -83,6 +104,11 @@ daily-checkin/
 │   ├── workbuddy/              #   登录态备份 / 还原 / 取号
 │   ├── qoder/                  #   登录态(DPAPI+AES-GCM)备份 / 还原 / 取号 / 立即签到
 │   └── traework/               #   登录态(AES-128-CBC)备份 / 还原 / 取号
+├── wps-airscript/              # 金山文档 AirScript 版（零服务器，云端定时）
+│   ├── checkin.js              #   四平台签到脚本（粘进 AirScript 编辑器即可）
+│   ├── deploy.html             #   部署页：一键复制脚本 + 模板地址 + 步骤
+│   ├── build.py                #   由 checkin.js 生成 deploy.html
+│   └── README.md               #   部署说明 / 账号格式 / 排障
 ├── docs/                       # 各平台详细文档 + 青龙部署 + FAQ
 ├── requirements.txt            # 仅切换脚本按需 cryptography，签到零依赖
 ├── LICENSE                     # MIT
@@ -124,11 +150,12 @@ python switchers/traework/switch_auth.py show
 
 | 方式 | 适用场景 | 说明 |
 | --- | --- | --- |
+| 金山文档 AirScript | **没有服务器、电脑不常开** | 金山文档里跑云端定时，见 [wps-airscript/README.md](wps-airscript/README.md) |
 | 青龙面板 | 有服务器/常开设备 | 上传单文件 + 环境变量 + cron，见 [docs/qinglong.md](docs/qinglong.md) |
 | Windows 计划任务 | 本机常开 | `schtasks` 每天跑一次，命令见各平台文档 |
 | WorkBuddy 内置自动化 | 本机常开 | 用 WorkBuddy 的「自动化」功能定时跑脚本，见 [docs/workbuddy.md](docs/workbuddy.md) |
 
-关机/休眠到点不执行，求稳建议挂青龙。
+关机/休眠到点不执行；要关机也能跑就用金山文档 AirScript 或青龙。
 
 ## 常见问题
 

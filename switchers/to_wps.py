@@ -326,6 +326,114 @@ def handle_platform(platform, raw_arg, from_stdin, quiet, compact=True):
     return convert(platform, lines, compact=compact)
 
 
+# ---------------------------------------------------------------- 中文交互菜单
+def _ask(prompt):
+    """读一行；Ctrl+C 或输入结束返回 None。"""
+    try:
+        return input(prompt).strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None
+
+
+def _emit(jsons=None, tsv_rows=None):
+    """打印结果并复制到剪贴板。"""
+    if tsv_rows:
+        text = "\n".join("%s\t%s" % (p, j) for p, j in tsv_rows)
+    else:
+        text = "\n".join(jsons or [])
+    print()
+    print(text)
+    print()
+    if copy_text(text):
+        print("已复制到剪贴板。")
+        if tsv_rows:
+            print("在表格里点中 A 列第一个空行，按 Ctrl+V，平台和 JSON 会自动分到 A、B 两列。")
+        else:
+            print("回到表格，在 B 列对应行粘贴即可。")
+    else:
+        print("（自动复制没成功，请手动选中上面的内容复制）")
+
+
+def _do_paste():
+    plat = _ask("\n是哪个平台？（ima / workbuddy / qoder / traework）：")
+    if plat is None:
+        return
+    plat = plat.lower()
+    if plat not in PLATFORMS:
+        print("平台名不对，已取消。")
+        return
+    print("把账号行粘进来（用 # 分隔，形如 a#b#c#d），回车结束：")
+    line = _ask("账号行：")
+    if not line:
+        print("没有输入，已取消。")
+        return
+    jsons = handle_platform(plat, line, False, quiet=False)
+    if jsons:
+        _emit(jsons)
+
+
+def interactive_menu():
+    """中文交互菜单，给 to_wps.bat 双击用。"""
+    try:                      # 行缓冲：保证提示语与结果的先后顺序
+        sys.stdout.reconfigure(line_buffering=True)
+    except (AttributeError, ValueError):
+        pass
+    print()
+    print("=" * 62)
+    print("  aidaka · AI 打卡机  ——  账号行转表格 JSON")
+    print("=" * 62)
+
+    while True:
+        print()
+        print("-" * 62)
+        print("  先把账号行准备好：运行 switchers\\<平台>\\switch_auth.bat 选 [2]")
+        print("  在这里转成金山文档表格 B 列要的 JSON，结果自动复制到剪贴板")
+        print("-" * 62)
+        print("    [1] ima")
+        print("    [2] workbuddy    （新版客户端登录态已加密，先看 README）")
+        print("    [3] qoder")
+        print("    [4] traework")
+        print("    [5] 全部四个平台（TSV 格式，表格 A 列粘一次填满整表）")
+        print("    [6] 手动粘贴账号行（从别的电脑拿到的）")
+        print("    [0] 退出")
+        print("-" * 62)
+
+        ch = _ask("请输入序号后回车：")
+        if ch is None or ch.lower() in ("0", "q", "exit"):
+            print("已退出。")
+            return 0
+
+        if ch in ("1", "2", "3", "4"):
+            plat = PLATFORMS[int(ch) - 1]
+            print()
+            print("-" * 62)
+            print("  正在处理：%s" % plat)
+            print("-" * 62)
+            jsons = handle_platform(plat, None, False, quiet=False)
+            if jsons:
+                _emit(jsons)
+        elif ch == "5":
+            print()
+            print("正在转换四个平台，请稍候……")
+            rows = []
+            for p in PLATFORMS:
+                for j in handle_platform(p, None, False, quiet=True):
+                    rows.append((p, j))
+            if rows:
+                _emit(None, rows)
+            else:
+                print("没有可输出的内容。")
+        elif ch == "6":
+            _do_paste()
+        else:
+            print("没有这个选项，请重新输入。")
+            continue
+
+        if _ask("\n按回车返回菜单……") is None:
+            return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="把 switchers 的青龙格式账号行转成金山文档表格 B 列的 JSON",
@@ -333,15 +441,24 @@ def main(argv=None):
         epilog="示例:\n"
                "  python to_wps.py qoder\n"
                "  python to_wps.py all --tsv --clip\n"
-               "  echo 'uid#2#guid#rt#备注' | python to_wps.py ima --stdin\n")
-    ap.add_argument("platform", help="ima / workbuddy / qoder / traework，或 all")
+               "  echo 'uid#2#guid#rt#备注' | python to_wps.py ima --stdin\n"
+               "  python to_wps.py --menu          # 中文交互菜单（to_wps.bat 双击走这里）\n")
+    ap.add_argument("platform", nargs="?", help="ima / workbuddy / qoder / traework，或 all")
     ap.add_argument("account", nargs="?", help="直接给账号行（# 分隔）；不给则自动跑 switcher")
     ap.add_argument("--stdin", action="store_true", help="从标准输入读账号行")
     ap.add_argument("--tsv", action="store_true", help="输出「平台<TAB>JSON」，便于整表粘贴")
     ap.add_argument("--clip", action="store_true", help="结果复制到剪贴板")
     ap.add_argument("--pretty", action="store_true", help="JSON 带缩进（更好看但更长）")
     ap.add_argument("--quiet", action="store_true", help="不打印提示")
+    ap.add_argument("--menu", action="store_true", help="进入中文交互菜单")
     args = ap.parse_args(argv)
+
+    if args.menu:
+        return interactive_menu()
+
+    if not args.platform:
+        ap.print_help()
+        return 2
 
     key = args.platform.strip().lower()
     targets = list(PLATFORMS) if key == "all" else [key]

@@ -149,7 +149,7 @@ python switchers/to_wps.py all --tsv --clip     # 四个平台一起转好并复
 python switchers/to_wps.py ima --stdin          # 从别处粘一行进去
 ```
 
-Windows 上也可以直接**双击 `switchers/to_wps.bat`**，菜单里选平台，转好的 JSON 自动进剪贴板。
+Windows 上也可以直接**双击 `switchers/to_wps.bat`**，出中文菜单，选个序号就行，转好的 JSON 自动进剪贴板。
 
 ## 输出字段
 

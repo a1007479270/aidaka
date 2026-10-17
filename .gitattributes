@@ -5,3 +5,8 @@
 *.md text eol=lf
 *.js text eol=lf
 *.html text eol=lf
+
+# 注意：所有 *.bat 为 GBK(cp936) 编码 + CRLF
+# - 用编辑器打开请选 GBK，勿另存为 UTF-8：cmd 按 GBK 解析 UTF-8 字节会导致断行、脚本报错
+# - 也不要加 UTF-8 BOM：BOM 会混进首行命令，让 @echo off 失效
+# - 菜单等大段中文提示放在 .py 里输出（Python 走 Unicode 控制台接口，不受代码页影响）

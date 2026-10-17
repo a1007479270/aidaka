@@ -1,15 +1,14 @@
 @echo off
 setlocal
-chcp 65001 >nul
 REM ============================================================
 REM  TraeWork login-state switcher (Windows launcher) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show]
 REM  It delegates to switch_auth.py (Python).
-REM  TraeWork ç™»å½•æ€æ˜¯åŠ å¯†çš„(AES-128-CBC)ï¼Œéœ€è¦ cryptographyï¼Œç¼ºå¤±æ—¶ä¼šè‡ªåŠ¨å®‰è£…ã€‚
+REM  TraeWork µÇÂ¼Ì¬ÊÇ¼ÓÃÜµÄ(AES-128-CBC)£¬ĞèÒª cryptography£¬È±Ê§Ê±»á×Ô¶¯°²×°¡£
 REM ============================================================
 set "SCRIPT=%~dp0switch_auth.py"
 if not exist "%SCRIPT%" (
-    echo [ERROR] Cannot find switch_auth.py beside this .bat file.
+    echo [´íÎó] ±¾Ä¿Â¼ÏÂÕÒ²»µ½ switch_auth.py£¬ÇëÈ·±£±¾ÎÄ¼şºÍËüÔÚÍ¬Ò»¸öÄ¿Â¼¡£
     pause
     exit /b 1
 )
@@ -30,17 +29,17 @@ for %%C in (py python python3) do (
 
 if defined PY goto :run
 if not defined FALLBACK (
-    echo [ERROR] Python not found. Install Python 3.8+ and add it to PATH, or use the py launcher.
-    echo         https://www.python.org/downloads/
+    echo [´íÎó] Ã»ÓĞÕÒµ½ Python¡£Çë°²×° Python 3.8 ÒÔÉÏ°æ±¾²¢¼ÓÈë PATH£¬ or use the py launcher.
+    echo         ÏÂÔØµØÖ·£ºhttps://www.python.org/downloads/
     pause
     exit /b 1
 )
 
-echo [SETUP] cryptography is missing, installing it once ...
+echo [×¼±¸] È±ÉÙ cryptography ¿â£¬ÕıÔÚ×Ô¶¯°²×°£¨Ö»Ğè×°Ò»´Î£©¡­¡­
 %FALLBACK% -m pip install --quiet --disable-pip-version-check cryptography
 %FALLBACK% -c "import cryptography" >nul 2>nul
 if errorlevel 1 (
-    echo [ERROR] Could not install cryptography automatically. Run this manually, then retry:
+    echo [´íÎó] ×Ô¶¯°²×° cryptography Ê§°Ü¡£ÇëÏÈÊÖ¶¯Ö´ĞĞÏÂÃæÕâÌõÃüÁî£¬È»ºóÖØĞÂÔËĞĞ£º
     echo             %FALLBACK% -m pip install cryptography
     pause
     exit /b 1

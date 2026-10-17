@@ -1,104 +1,46 @@
 @echo off
 setlocal enabledelayedexpansion
-title to_wps - account line to table JSON
+title aidaka 账号行转表格JSON
 cd /d "%~dp0"
 
 REM ============================================================
-REM  Convert a switcher account line (#-separated) into the JSON
-REM  that the kdocs / WPS sheet needs in column B.
-REM
-REM  Double-click this file to use the menu, or pass arguments:
-REM      to_wps.bat qoder
-REM      to_wps.bat all --tsv --clip
-REM  The real work is done by to_wps.py (same folder).
+REM  aidaka · AI 打卡机
+REM  把账号行（# 分隔）转成金山文档表格 B 列要的 JSON
+REM  双击运行进中文菜单；也可命令行传参： to_wps.bat qoder
+REM  真正的转换逻辑和菜单都在 to_wps.py
 REM ============================================================
 
 set "SCRIPT=%~dp0to_wps.py"
 if not exist "%SCRIPT%" (
-    echo [ERROR] to_wps.py not found next to this .bat file.
+    echo [错误] 本目录下找不到 to_wps.py，请确保本文件和它在同一个目录。
     pause
     exit /b 1
 )
 
-REM ---- locate a python interpreter ----
+REM ---- 找 Python ----
 set "PY="
 where py     >nul 2>nul && set "PY=py"
 if not defined PY ( where python  >nul 2>nul && set "PY=python" )
 if not defined PY ( where python3 >nul 2>nul && set "PY=python3" )
 if not defined PY (
-    echo [ERROR] Python not found. Install Python 3.8+ and add it to PATH,
-    echo         or open this file in Notepad and set PY to your python.exe.
+    echo [错误] 没有找到 Python。请安装 Python 3.8 以上版本，并加入 PATH。
+    echo        或者用记事本打开本文件，把 PY 改成 python.exe 的完整路径。
     pause
     exit /b 1
 )
 
-REM ---- args given: pass through, no menu, no pause ----
+REM ---- 带了参数就直接转，不进菜单 ----
 if not "%~1"=="" (
     "%PY%" "%SCRIPT%" %*
     exit /b !ERRORLEVEL!
 )
 
-REM ---- no args: interactive menu ----
-:MENU
-cls
-echo ============================================================
-echo    Account line   ==^>   JSON for sheet column B
-echo ============================================================
-echo   Step 1: get the line from switchers\^<platform^>\switch_auth.bat  [2]
-echo   Step 2: convert it here - the JSON lands in your clipboard
-echo ------------------------------------------------------------
-echo    [1] ima
-echo    [2] workbuddy    (new client encrypts login state - see README)
-echo    [3] qoder
-echo    [4] traework
-echo    [5] all four platforms  (TSV: paste once at column A)
-echo    [6] paste an account line manually
-echo    [0] exit
-echo ------------------------------------------------------------
-set "CH="
-set /p "CH=Select: "
-set "CH=!CH:~0,1!"
-
-set "PLAT="
-if "!CH!"=="1" set "PLAT=ima"
-if "!CH!"=="2" set "PLAT=workbuddy"
-if "!CH!"=="3" set "PLAT=qoder"
-if "!CH!"=="4" set "PLAT=traework"
-if defined PLAT goto :DOONE
-if "!CH!"=="5" goto :DOALL
-if "!CH!"=="6" goto :DOPASTE
-if "!CH!"=="0" exit /b 0
-goto MENU
-
-:DOONE
-echo.
-echo ---------------- !PLAT! ----------------
-"%PY%" "%SCRIPT%" !PLAT! --clip
-echo.
-echo Paste that JSON line into column B of the sheet (already copied).
-pause
-goto MENU
-
-:DOALL
-echo.
-echo ---------------- all platforms (TSV) ----------------
-"%PY%" "%SCRIPT%" all --tsv --clip
-echo.
-echo Click the first empty cell of column A, then Ctrl+V - it fills A and B.
-pause
-goto MENU
-
-:DOPASTE
-echo.
-set "PLAT="
-set /p "PLAT=Platform (ima/workbuddy/qoder/traework): "
-if "!PLAT!"=="" ( echo Cancelled.& pause& goto MENU )
-echo Paste the account line (a#b#c#d), then press Enter:
-set "ACC="
-set /p "ACC=Line: "
-if "!ACC!"=="" ( echo Cancelled.& pause& goto MENU )
-echo.
-"%PY%" "%SCRIPT%" !PLAT! "!ACC!" --clip
-echo.
-pause
-goto MENU
+REM ---- 双击：进中文菜单 ----
+"%PY%" "%SCRIPT%" --menu
+set "RC=!ERRORLEVEL!"
+if not "!RC!"=="0" (
+    echo.
+    echo 运行出错，错误码 !RC!。请把上面的报错信息截图反馈。
+    pause
+)
+exit /b !RC!

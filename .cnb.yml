@@ -88,16 +88,16 @@ main:
             code=$(python - <<'PY'
             import urllib.request
             try:
-                print(urllib.request.urlopen("https://api.github.com/repos/cnblove/aidaka", timeout=10).status)
+                print(urllib.request.urlopen("https://api.github.com/repos/a1007479270/aidaka", timeout=10).status)
             except Exception as e:
                 print(getattr(e, "code", 0))
             PY
             )
             if [ "$code" = "200" ]; then
-              echo "✔ GitHub 目标仓库 cnblove/aidaka 可访问"
+              echo "✔ GitHub 目标仓库 a1007479270/aidaka 可访问"
             else
               echo "⚠ GitHub 目标仓库返回 $code（未创建或为私有）"
-              echo "  同步会失败。请先在 GitHub 建一个空仓库 cnblove/aidaka（不要初始化 README）。"
+              echo "  同步会失败。请先在 GitHub 建一个空仓库 a1007479270/aidaka（不要初始化 README）。"
             fi
 
         # 单向镜像：GitHub 侧永远等于主仓，允许强推以消除手工漂移。
@@ -107,7 +107,7 @@ main:
           imports:
             - *github-secrets
           settings:
-            target_url: https://github.com/cnblove/aidaka.git
+            target_url: https://github.com/a1007479270/aidaka.git
             auth_type: https
             username: ${GIT_USERNAME}
             password: ${GIT_ACCESS_TOKEN}

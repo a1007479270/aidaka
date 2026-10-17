@@ -51,6 +51,22 @@ python checkin.py --dry-run
 python checkin.py --debug
 ```
 
+**本地跑不用先配环境变量。** 某个平台的环境变量为空时，`checkin.py` 会自动按下面顺序找凭证：
+
+1. 环境变量（`IMA` / `WORKBUDDY` / `QODER` / `TRAEWORK`）
+2. `switchers/<平台>/accounts.txt`（一行一个账号，格式同环境变量）
+3. 现跑 `switchers/<平台>/switch_auth.py show`，从**本机登录态**取一份
+
+取到的凭证只在本次进程内使用，**不会写进系统环境变量**。运行时每行会打印 `[凭据] …` 说明来源。
+
+| 开关 | 作用 |
+| --- | --- |
+| `--save-local-cred` | 把取到的账号行存成 `switchers/<平台>/accounts.txt`，下次直接用（含明文 token，已在 `.gitignore` 里） |
+| `--no-local-cred` | 关掉本地回退，只用环境变量（青龙、CI 等场景） |
+
+> WorkBuddy 新版客户端把登录态加密了，`show` 读到的只是密文信封，所以它**没有**本地回退，
+> 必须显式配 `WORKBUDDY` 环境变量。其余三个平台都能自动取到。
+
 ### 方式二：青龙面板（服务器 7×24 运行）
 
 每个平台脚本都是**单文件自包含**的，把 `platforms/` 下对应文件单独上传到青龙即可，不需要上传整个仓库：

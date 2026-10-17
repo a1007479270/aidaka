@@ -4,6 +4,9 @@ workbuddy_auth_backup/
 qoder_auth_backup/
 traework_auth_backup/
 credentials.json
+# checkin.py --save-local-cred 落盘的账号行（明文 token）
+switchers/*/accounts.txt
+accounts.txt
 *.bak
 auth.v1.dat*
 auth.machine-id

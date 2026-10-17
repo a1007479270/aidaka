@@ -1,0 +1,33 @@
+# ===== 凭据与登录态备份（含真实 token，严禁上传）=====
+ima_cred_backup/
+workbuddy_auth_backup/
+qoder_auth_backup/
+traework_auth_backup/
+credentials.json
+*.bak
+auth.v1.dat*
+auth.machine-id
+Local State
+storage.json
+*.info.*
+
+# ===== 本地取号缓存 / 青龙导出文件 =====
+qoder_accounts.local.json
+*_state.txt
+qoder_state.txt
+QODER_LINES*
+ql.txt
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# ===== 编辑器 / 系统 =====
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+.workbuddy/

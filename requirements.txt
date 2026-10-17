@@ -1,0 +1,8 @@
+# daily-checkin 的签到脚本零第三方依赖（纯 Python 标准库，Python 3.8+）。
+#
+# 仅以下场景需要额外安装 cryptography：
+#   - switchers/ima/switch_auth.py      的 extract（从 ima 客户端提取凭证）
+#   - switchers/traework/switch_auth.py 的登录态解密
+# 两者都是 Windows 桌面端本地工具；青龙里的签到脚本不需要它。
+# 手动安装：python -m pip install cryptography
+cryptography>=41.0 ; sys_platform == "win32"

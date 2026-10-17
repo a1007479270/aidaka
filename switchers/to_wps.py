@@ -343,7 +343,8 @@ def main(argv=None):
     ap.add_argument("--quiet", action="store_true", help="不打印提示")
     args = ap.parse_args(argv)
 
-    targets = list(PLATFORMS) if args.platform.lower() == "all" else [args.platform.lower()]
+    key = args.platform.strip().lower()
+    targets = list(PLATFORMS) if key == "all" else [key]
     for p in targets:
         if p not in PLATFORMS:
             eprint("[错误] 未知平台: %s（可选: %s / all）" % (p, " ".join(PLATFORMS)))

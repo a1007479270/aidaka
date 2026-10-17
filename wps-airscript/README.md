@@ -88,6 +88,10 @@ https://www.kdocs.cn/l/ckNJ04YURB8F
 这些 JSON **不要手抄**。本仓库的 switcher 输出的是「青龙环境变量」格式（`#` 分隔的一行），
 而表格要的是 JSON——用 [`switchers/to_wps.py`](../switchers/to_wps.py) 一条命令转好，直接粘：
 
+**Windows 不想敲命令**：双击 [`switchers/to_wps.bat`](../switchers/to_wps.bat)，出菜单选平台，
+转好的 JSON 自动进剪贴板，回到表格 B 列 `Ctrl+V` 就行。选 `[5]` 还能一次转完四个平台、
+直接整表粘贴。
+
 ```bash
 # 单个平台：自动跑本机 switcher，输出可粘贴的 JSON
 python switchers/to_wps.py qoder

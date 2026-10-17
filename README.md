@@ -101,6 +101,7 @@ daily-checkin/
 │   └── traework.py
 ├── switchers/                  # 桌面端登录态管理（Windows，双击 .bat 进菜单）
 │   ├── to_wps.py               #   账号行(# 分隔) → 金山文档表格 B 列 JSON 转换器
+│   ├── to_wps.bat              #   同上，Windows 双击出菜单（转换结果自动进剪贴板）
 │   ├── ima/                    #   凭证提取(DPAPI+AES-GCM) / 备份 / 还原
 │   ├── workbuddy/              #   登录态备份 / 还原 / 取号
 │   ├── qoder/                  #   登录态(DPAPI+AES-GCM)备份 / 还原 / 取号 / 立即签到
@@ -139,6 +140,8 @@ python switchers/to_wps.py qoder                # 单个平台，输出可粘贴
 python switchers/to_wps.py all --tsv --clip     # 四个平台一起转好并复制，表格 A 列粘一次填满整表
 python switchers/to_wps.py ima --stdin          # 从别处粘一行进去
 ```
+
+Windows 上也可以直接**双击 `switchers/to_wps.bat`**，菜单里选平台，转好的 JSON 自动进剪贴板。
 
 ## 输出字段
 

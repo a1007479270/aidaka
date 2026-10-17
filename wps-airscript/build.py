@@ -154,8 +154,10 @@ PAGE = """<!DOCTYPE html>
       <tr><td><code>traework</code></td><td><code>{{"token":"","uid":"","device_id":"","name":""}}</code></td></tr>
     </table>
     <p class="hint" style="margin:12px 0 0">
-      D / E / F 列可填 Server酱 SendKey、PushPlus token、企业微信机器人 Webhook，跑完自动推送汇总；不填就不推送。
-      账号行从本仓库 <code>switchers/&lt;平台&gt;/switch_auth.py show</code> 取自本机登录态，别手抄。
+      别手抄 token：用本仓库的转换器一条命令生成，直接粘。四个平台一起转、并复制成可整表粘贴的格式：
+      <br><code>python switchers/to_wps.py all --tsv --clip</code>
+      <br>单个平台：<code>python switchers/to_wps.py qoder --clip</code>　从别处粘一行：<code>python switchers/to_wps.py ima --stdin</code>
+      <br>D / E / F 列可填 Server酱 SendKey、PushPlus token、企业微信机器人 Webhook，跑完自动推送汇总；不填就不推送。
     </p>
   </div>
 

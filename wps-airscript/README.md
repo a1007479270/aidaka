@@ -85,20 +85,40 @@ https://www.kdocs.cn/l/ckNJ04YURB8F
 {"token":"","uid":"","device_id":"","name":""}
 ```
 
-这些 JSON **不要手抄**，用本仓库的 switcher 从本机登录态生成，一行一个：
+这些 JSON **不要手抄**。本仓库的 switcher 输出的是「青龙环境变量」格式（`#` 分隔的一行），
+而表格要的是 JSON——用 [`switchers/to_wps.py`](../switchers/to_wps.py) 一条命令转好，直接粘：
 
 ```bash
-python switchers/ima/switch_auth.py show        # ima 需先完全退出客户端再 extract
-python switchers/workbuddy/switch_auth.py show
-python switchers/qoder/switch_auth.py show
-python switchers/traework/switch_auth.py show
+# 单个平台：自动跑本机 switcher，输出可粘贴的 JSON
+python switchers/to_wps.py qoder
+
+# 顺带复制到剪贴板
+python switchers/to_wps.py qoder --clip
+
+# 四个平台一次转完，输出「平台<TAB>JSON」，在表格 A 列粘贴一次就填满所有行
+python switchers/to_wps.py all --tsv --clip
+
+# 从别处粘一行进去（不跑 switcher）
+python switchers/to_wps.py traework "ACCESS_TOKEN#UID#备注#设备ID"
+python switchers/to_wps.py ima --stdin        # 然后 Ctrl+V 粘贴，回车结束
 ```
 
-`show` 打出来的是 `#` 分隔的青龙格式，按上表把字段搬进 JSON 即可（字段名一一对应：
-ima 是 `ima_uid/uid_type/ima_guid/refresh_token`，Qoder 是 `accessToken/refreshToken/uid/device`……）。
+对应关系（脚本内部就是按这个映射搬字段）：
 
-> 用 macOS / Linux 没法跑 Windows switcher 的话，直接照 `platforms/*.py` 里各平台文档说明手工取一次即可，
-> 取到的值填进 JSON 一样能用。
+| 平台 | switcher 输出的 `#` 段 | → B 列 JSON 字段 |
+| --- | --- | --- |
+| ima | `ima_uid#uid_type#ima_guid#refresh_token#备注` | `ima_uid / uid_type / ima_guid / refresh_token / name` |
+| workbuddy | `ACCESS_TOKEN#UID#备注` | `token / uid / name` |
+| qoder | `ACCESS_TOKEN#REFRESH_TOKEN#UID#备注#设备JSON` | `accessToken / refreshToken / uid / name / device` |
+| traework | `ACCESS_TOKEN#UID#备注#设备ID` | `token / uid / name / device_id` |
+
+脚本会自己挑行（忽略 `===` 标题和提示行）、自己祛占位符备注；
+`--tsv` 输出的每一行都是「平台 + TAB + JSON」，粘到表格 A 列时 kdocs 会自动分列分行。
+
+> **WorkBuddy 注意**：新版客户端把登录态加密了，`switch_auth.py show` 会输出一个
+> `{'$wbEncrypted': ...}` 的密文信封而不是 token。这时 `to_wps.py` 会明确报错并给出两条出路：
+> 用旧版明文备份 restore 后再 show，或者从客户端请求头抄 `Authorization: Bearer <token>`，
+> 然后 `python switchers/to_wps.py workbuddy "<token>#<uid>#备注"`。
 
 ---
 
@@ -151,6 +171,9 @@ ima 是 `ima_uid/uid_type/ima_guid/refresh_token`，Qoder 是 `accessToken/refre
 | TraeWork 报 `9004` | 缺设备 ID，重新 `show` 取带 device_id 的行 |
 | 报 `刷新登录失败`（ima） | refresh_token 失效，重新 extract |
 | 定时任务到点没跑 | 确认任务「执行脚本」选的是你保存的这个脚本；看文档权限是否变更过 |
+| `to_wps.py` 说「没找到 X 的账号行」 | 该平台本机没登录过，或输出不是 `#` 分隔格式；改用 `--stdin` 手工粘一行进去 |
+| `to_wps.py` 输出 `$wbEncrypted` 报错 | WorkBuddy 新版客户端加密了登录态，见上面「WorkBuddy 注意」那两条出路 |
+| `to_wps.py` 提示缺 `cryptography` | 换个装了这个库的 Python 跑（脚本会自动尝试 py -3.10 / 常见安装路径）；或先 `pip install cryptography` |
 
 ---
 

@@ -100,6 +100,7 @@ daily-checkin/
 │   ├── qoder.py
 │   └── traework.py
 ├── switchers/                  # 桌面端登录态管理（Windows，双击 .bat 进菜单）
+│   ├── to_wps.py               #   账号行(# 分隔) → 金山文档表格 B 列 JSON 转换器
 │   ├── ima/                    #   凭证提取(DPAPI+AES-GCM) / 备份 / 还原
 │   ├── workbuddy/              #   登录态备份 / 还原 / 取号
 │   ├── qoder/                  #   登录态(DPAPI+AES-GCM)备份 / 还原 / 取号 / 立即签到
@@ -130,6 +131,14 @@ python switchers/traework/switch_auth.py show
 多账号：在桌面端切换登录下一个账号 → 再跑一次 `show` → 逐行贴进同一个环境变量。
 `switchers/` 同时提供登录态**备份/还原**（还原前自动备份当前登录态，防止丢号），
 备份目录跟随脚本自身，拷到任意目录/电脑都能用。
+
+要填金山文档表格（AirScript 版）的话，别手抄 JSON —— 一条命令把上面那行转成 B 列要的格式：
+
+```bash
+python switchers/to_wps.py qoder                # 单个平台，输出可粘贴的 JSON
+python switchers/to_wps.py all --tsv --clip     # 四个平台一起转好并复制，表格 A 列粘一次填满整表
+python switchers/to_wps.py ima --stdin          # 从别处粘一行进去
+```
 
 ## 输出字段
 

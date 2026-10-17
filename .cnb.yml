@@ -1,0 +1,124 @@
+# aidaka · AI 打卡机 —— CNB 主仓流水线
+#
+# 主仓在 CNB，GitHub 只做**单向镜像**（展示 + 下载），方向只有 CNB → GitHub。
+# 凭据（GIT_USERNAME / GIT_ACCESS_TOKEN）放在密钥仓库里，通过 imports 注入，
+# 不要写进本文件。
+#
+# 校验项针对本项目踩过的坑：
+#   1. 所有 .bat 必须 GBK 编码 + CRLF 行尾（cmd 按 GBK 解析 UTF-8 字节会断行、整脚本报错）
+#   2. wps-airscript/deploy.html 由 build.py 从 checkin.js 生成，两者不能漂移
+#   3. 签到脚本零第三方依赖，只做语法编译与 --list 冒烟
+
+# 校验锚点：main 的 push 与所有 PR 共用，所以只放「无副作用」的检查。
+# 不要把同步 GitHub 这类只在 push 时做的事混进来（PR 事件拿不到密钥仓库）。
+._lint: &lint
+  name: lint
+  image: python:3.12
+  script: |
+    set -e
+    python -m compileall -q checkin.py platforms switchers
+    python - <<'PY'
+    import glob, io, json, re, sys
+
+    bad = []
+
+    # .bat：必须 GBK 编码 + CRLF 行尾
+    for p in sorted(glob.glob("switchers/**/*.bat", recursive=True)):
+        b = io.open(p, "rb").read()
+        if b.count(b"\r\n") != b.count(b"\n"):
+            bad.append("%s 行尾不是 CRLF" % p)
+        try:
+            b.decode("gbk")
+        except UnicodeDecodeError:
+            bad.append("%s 不是 GBK 编码（cmd 会解析错乱）" % p)
+
+    # deploy.html 内嵌脚本必须与 checkin.js 一致
+    html = io.open("wps-airscript/deploy.html", encoding="utf-8").read()
+    src = io.open("wps-airscript/checkin.js", encoding="utf-8").read()
+    m = re.search(r'const SCRIPT = ("(?:[^"\\]|\\.)*");', html)
+    if not m:
+        bad.append("deploy.html 里找不到内嵌脚本")
+    elif json.loads(m.group(1)) != src:
+        bad.append("deploy.html 与 checkin.js 不一致，请重跑 python wps-airscript/build.py")
+
+    if bad:
+        print("✘ 校验失败：")
+        for x in bad:
+            print("  - " + x)
+        sys.exit(1)
+    print("✔ 校验通过")
+    PY
+
+._smoke: &smoke
+  name: smoke
+  image: python:3.12
+  script: |
+    set -e
+    python checkin.py --list
+
+# 同步 GitHub 用的密钥仓库文件。单独定义成锚点，多个 stage 引用同一份，
+# 避免地址写两遍、改一处漏一处。
+._github-secrets: &github-secrets https://cnb.cool/cnblove/secret/-/blob/main/envs.yml
+
+main:
+  push:
+    - stages:
+        - *lint
+        - *smoke
+        # 先自检凭据是否真的注入了：git-sync 缺凭据时只报一次含糊的 push 失败，
+        # 这里失败能直接说清缺哪个变量。
+        - name: check-sync-credentials
+          image: python:3.12
+          imports:
+            - *github-secrets
+          script: |
+            missing=""
+            [ -n "$GIT_USERNAME" ] || missing="$missing GIT_USERNAME"
+            [ -n "$GIT_ACCESS_TOKEN" ] || missing="$missing GIT_ACCESS_TOKEN"
+            if [ -n "$missing" ]; then
+              echo "✘ 同步 GitHub 的凭据缺失：$missing"
+              echo "  请在密钥仓库 cnb.cool/cnblove/secret 的 envs.yml 里补上这两个变量，"
+              echo "  并确认 envs.yml 本身是合法 YAML。"
+              exit 1
+            fi
+            echo "✔ 凭据已注入（GIT_USERNAME=$GIT_USERNAME）"
+
+            # GitHub 目标仓库必须已存在，git-sync 不会自动建库。
+            # 这里是警告而不是失败：私有仓库匿名访问 API 也会 404，避免误杀。
+            code=$(python - <<'PY'
+            import urllib.request
+            try:
+                print(urllib.request.urlopen("https://api.github.com/repos/cnblove/aidaka", timeout=10).status)
+            except Exception as e:
+                print(getattr(e, "code", 0))
+            PY
+            )
+            if [ "$code" = "200" ]; then
+              echo "✔ GitHub 目标仓库 cnblove/aidaka 可访问"
+            else
+              echo "⚠ GitHub 目标仓库返回 $code（未创建或为私有）"
+              echo "  同步会失败。请先在 GitHub 建一个空仓库 cnblove/aidaka（不要初始化 README）。"
+            fi
+
+        # 单向镜像：GitHub 侧永远等于主仓，允许强推以消除手工漂移。
+        # ⚠ GitHub 侧任何自动化都不得回写仓库内容——会被下一次强推静默覆盖。
+        - name: sync-to-github
+          image: tencentcom/git-sync
+          imports:
+            - *github-secrets
+          settings:
+            target_url: https://github.com/cnblove/aidaka.git
+            auth_type: https
+            username: ${GIT_USERNAME}
+            password: ${GIT_ACCESS_TOKEN}
+            branch: main
+            force: true
+            # 标签一起镜像过去，方便看发布记录
+            push_tags: true
+
+# PR 只跑校验，不同步
+"**":
+  pull_request:
+    - stages:
+        - *lint
+        - *smoke

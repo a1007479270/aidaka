@@ -64,8 +64,10 @@ python checkin.py --debug
 | `--save-local-cred` | 把取到的账号行存成 `switchers/<平台>/accounts.txt`，下次直接用（含明文 token，已在 `.gitignore` 里） |
 | `--no-local-cred` | 关掉本地回退，只用环境变量（青龙、CI 等场景） |
 
-> WorkBuddy 新版客户端把登录态加密了，`show` 读到的只是密文信封，所以它**没有**本地回退，
-> 必须显式配 `WORKBUDDY` 环境变量。其余三个平台都能自动取到。
+> **WorkBuddy 的特殊情况**：新版客户端把 token 加密成 `{"$wbEncrypted":1,...}` 信封，本地解不开。
+> `show` 会退到「同目录下的历史明文快照」或 `accounts.txt` 缓存，所以**通常也能自动取到**，
+> 但拿到的是最后一次明文落盘的那个 token（约 60 天有效期），客户端刷新后不会自动跟着更新。
+> 详见 [docs/workbuddy.md](docs/workbuddy.md#️-新版客户端把字段加密了)。其余三个平台都是实时从本机登录态取。
 
 ### 方式二：青龙面板（服务器 7×24 运行）
 

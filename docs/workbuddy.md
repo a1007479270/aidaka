@@ -32,8 +32,10 @@ python switchers/workbuddy/switch_auth.py show
 ```
 
 直接输出 `ACCESS_TOKEN#UID#账号名` 一行，复制即可填入青龙环境变量。
-
 （交互式：双击 `switchers/workbuddy/switch_auth.bat` 选 `[2]`，效果相同。）
+
+加 `--save` 会把结果缓存进 `switchers/workbuddy/accounts.txt`，下次取不到时自动兜底；
+`python checkin.py` 在环境变量为空时也会自动走这条路，不用手动配环境变量。
 
 **方式二：手动读取登录态文件**
 
@@ -46,6 +48,49 @@ python switchers/workbuddy/switch_auth.py show
 取里面的 `auth.accessToken` 和 `account.uid`，按 `ACCESS_TOKEN#UID#账号名` 格式拼接。
 
 > token 约 60 天过期，过期后重取更新环境变量即可。
+
+### ⚠️ 新版客户端把字段加密了
+
+新版把登录文件里的 `accessToken` / `refreshToken` / `nickname` 换成了信封：
+
+```json
+"accessToken": { "$wbEncrypted": 1, "envelope": "eyJzdWl0ZSI6MSwia2V5SWQiOiI5MT..." }
+```
+
+`envelope` 解码后是 `{suite:1, keyId, nonce, authTag, ciphertext}`，算法是 **AES-256-GCM**。
+密钥在客户端构建时注入（`atRestSecretKey` → SHA256 得到 AES key，`keyId` 就是这把 key 的
+SHA256 前 16 位）。本地没有这把钥匙，**解不开**。
+
+所以 `switch_auth.py show` 改成按顺序找可用 token：
+
+| 顺序 | 来源 | 说明 |
+|---|---|---|
+| 1 | 当前登录文件 | 旧版客户端仍是明文，直接用 |
+| 2 | **同目录下的历史明文快照** | 加密前留下的 `workbuddy-desktop.<时间戳>.info`，没过期就能用 |
+| 3 | `accounts.txt` | 上次 `--save` 留下的缓存 |
+
+三条都不通时，脚本会打印诊断（哪个环节缺什么）和下一步可做的事，而不是只甩一句「失败」。
+输出里会标明 token 来自哪个文件、哪天到期，**剩 7 天内会提醒**。
+
+#### 已经试过、走不通的两条路（别再重复踩）
+
+- **从进程内存捞 token**：扫了 13 个 WorkBuddy 进程共约 4 GB 内存，能捞到的只有
+  `app_type=codebuddy` 的 token（CodeBuddy IDE 的）。拿它去调 `/v2/billing/meter/*`
+  一律 **401**——billing 接口只认没有 `app_type`（或 `app_type=workbuddy`）的 token。
+  加 `X-App-Type` 之类的头也无效，网关按 JWT 里的字段判。
+- **用 refreshToken 自己续期**：refresh token 是 Offline 类型（Keycloak，realm=`copilot`，
+  `azp=console`），有效期比 accessToken 长得多，但 `console` 是 confidential client，
+  刷新必须带 `client_secret`。这个值不在客户端 JS 内存里（原生层参与），代码里也没有硬编码。
+
+#### 到期后怎么办
+
+`show` 能给出的最晚值就是「最后一次明文落盘的那个 token」。到期后三选一：
+
+1. **换台机器 / 旧版客户端**跑一次 `show`，把账号行抄进 `switchers/workbuddy/accounts.txt`；
+2. **装回旧版客户端登录一次**，它会写一份明文快照，再升级回来——快照留在 auth 目录，`show` 能读到；
+3. 若手上有开发版客户端，DevTools 里抓一次 `Authorization: Bearer` 头，手工填 `accounts.txt`。
+
+> 一个 token 管 60 天，一年换 6 次。填好 `accounts.txt` 后，本地跑签到和青龙都不用手动配环境变量。
 
 ## 三、定时任务
 

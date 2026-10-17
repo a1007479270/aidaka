@@ -25,4 +25,5 @@ if not defined PY (
 )
 
 "%PY%" "%SCRIPT%" %*
-pause
+REM 带参数（list/backup/show）时不停顿，方便脚本调用；双击进菜单才停
+if "%~1"=="" pause

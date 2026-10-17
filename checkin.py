@@ -53,7 +53,7 @@ CRED_SOURCE = {
     "env": "环境变量",
     "file": "本地 %s" % LOCAL_ACCOUNT_FILE,
     "show": "本机登录态（switchers 现取）",
-    "encrypted": "登录态已被客户端加密，无法自动获取",
+    "encrypted": "登录态已被新版客户端加密（见 docs/workbuddy.md「新版加密」一节）",
     "none": "未找到本地凭证",
 }
 

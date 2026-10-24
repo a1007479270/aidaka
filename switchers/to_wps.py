@@ -304,14 +304,16 @@ def handle_platform(platform, raw_arg, from_stdin, quiet, compact=True):
             return []
     else:
         out, err = run_switcher(platform)
-        if "$wbEncrypted" in out:
-            eprint("[错误] WorkBuddy 登录态已被新版客户端加密，switcher 读到的只是密文信封，不是 token。")
-            eprint("       可行的取 token 方式：")
-            eprint("         1) 用旧版备份的明文登录态：switchers/workbuddy/ 里 restore 一份旧备份，再跑 show")
-            eprint("         2) 从客户端请求头抄 Authorization: Bearer <token>，然后：")
-            eprint('            python to_wps.py workbuddy "<token>#<uid>#备注"')
-            return []
         lines = extract_account_lines(platform, out)
+        if not lines and "$wbEncrypted" in out:
+            eprint("[错误] WorkBuddy 登录态是加密信封，且本机没能解开（缺客户端或密钥）。")
+            eprint("       可行做法：")
+            eprint("         1) 装/保留 WorkBuddy 桌面端并登录一次，直接重跑（会现场解密）")
+            eprint("         2) 客户端在非默认目录 → 设 WORKBUDDY_CLIENT_EXE=<...>\\WorkBuddy.exe")
+            eprint("         3) 在别的机器取到账号行，然后：")
+            eprint('            python to_wps.py workbuddy "<token>#<uid>#备注"')
+            eprint("       诊断细节: python switchers/workbuddy/switch_auth.py diag")
+            return []
         if not lines:
             eprint("[错误] %s 的 switcher 没有输出可识别的账号行。" % platform)
             detail = (out or err).strip()
@@ -391,7 +393,7 @@ def interactive_menu():
         print("  在这里转成金山文档表格 B 列要的 JSON，结果自动复制到剪贴板")
         print("-" * 62)
         print("    [1] ima")
-        print("    [2] workbuddy    （新版客户端登录态已加密，先看 README）")
+        print("    [2] workbuddy    （新版加密已支持本地解密，需本机有客户端）")
         print("    [3] qoder")
         print("    [4] traework")
         print("    [5] 全部四个平台（TSV 格式，表格 A 列粘一次填满整表）")

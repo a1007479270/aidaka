@@ -25,7 +25,7 @@ tok_def456#uid_002#小号
 
 **方式一（推荐）：用 switcher 一键获取**
 
-在已登录 WorkBuddy 的 Windows 电脑上：
+在已登录 WorkBuddy 的电脑上：
 
 ```bash
 python switchers/workbuddy/switch_auth.py show
@@ -34,63 +34,101 @@ python switchers/workbuddy/switch_auth.py show
 直接输出 `ACCESS_TOKEN#UID#账号名` 一行，复制即可填入青龙环境变量。
 （交互式：双击 `switchers/workbuddy/switch_auth.bat` 选 `[2]`，效果相同。）
 
+新版客户端的加密信封会**当场解开**，不需要旧版客户端、不需要手抄密文。
 加 `--save` 会把结果缓存进 `switchers/workbuddy/accounts.txt`，下次取不到时自动兜底；
 `python checkin.py` 在环境变量为空时也会自动走这条路，不用手动配环境变量。
 
-**方式二：手动读取登录态文件**
-
-用记事本打开：
+**方式二：手动读取登录态文件**（旧版客户端明文时可用）
 
 ```
 %LOCALAPPDATA%\CodeBuddyExtension\Data\Public\auth\workbuddy-desktop.info
 ```
 
-取里面的 `auth.accessToken` 和 `account.uid`，按 `ACCESS_TOKEN#UID#账号名` 格式拼接。
+取 `auth.accessToken` 和 `account.uid`，按 `ACCESS_TOKEN#UID#账号名` 拼接。
+新版客户端这里是密文，手抄没用——用方式一。
 
-> token 约 60 天过期，过期后重取更新环境变量即可。
+> token 由客户端滚动续期（有效期通常 30~60 天，刷新后旧 token 会被吊销）。
+> 所以取号要「现取现用」，别长期存一份快照。
 
-### ⚠️ 新版客户端把字段加密了
+### 新版客户端把字段加密了
 
-新版把登录文件里的 `accessToken` / `refreshToken` / `nickname` 换成了信封：
+登录文件里的 `accessToken` / `refreshToken` / `nickname` / `phoneNumber` 换成了信封：
 
 ```json
 "accessToken": { "$wbEncrypted": 1, "envelope": "eyJzdWl0ZSI6MSwia2V5SWQiOiI5MT..." }
 ```
 
-`envelope` 解码后是 `{suite:1, keyId, nonce, authTag, ciphertext}`，算法是 **AES-256-GCM**。
-密钥在客户端构建时注入（`atRestSecretKey` → SHA256 得到 AES key，`keyId` 就是这把 key 的
-SHA256 前 16 位）。本地没有这把钥匙，**解不开**。
+`envelope` 解码后是 `{suite:1, keyId, nonce, authTag, ciphertext}`，算法 **AES-256-GCM**：
 
-所以 `switch_auth.py show` 改成按顺序找可用 token：
+| 环节 | 规则 |
+|---|---|
+| AES 密钥 | `SHA-256(atRestSecretKey 字符串)` —— 对 44 字符 base64 **字符串本身**做 hash，不是先解码 |
+| keyId | `SHA-256(key).hex[:16]`，同时出现在信封和 AAD 里，用错钥匙必然认证失败 |
+| AAD | 54 字节固定结构：`"WB-AAD\0"` + `01` + `u32be(5)+"WBEV1"` + `u32be(6)+"sym-v1"` + `u32be(1)` + `u32be(16)` + `keyId`（ASCII 字符串，不是 hex） + `02 00 00`。本项目 `field_aad()` 逐字节实现，`selftest` 会校验长度 = 54 |
+
+**密钥不落盘，但客户端自己随时能取**：`WorkBuddy.exe` 是 Electron 应用，带
+`ELECTRON_RUN_AS_NODE=1` 启动时它退化成普通 Node，仍然注册着私有原生绑定，
+于是可以问它要：
+
+```bash
+ELECTRON_RUN_AS_NODE=1 "C:/Program Files/WorkBuddy/WorkBuddy.exe" \
+  -e "console.log(JSON.parse(process._linkedBinding('electron_browser_workbuddy_storage').loggerGet()).atRestSecretKey)"
+```
+
+`switch_auth.py` 就是这么做的：起一个隐藏子进程取密钥（约 0.5 秒，免管理员、不用客户端开窗口），
+在本机内存里解密，明文只用于拼一行环境变量。密钥来源优先级：
+
+```
+--key <44 字符密钥>  →  WORKBUDDY_ATREST_KEY  →  客户端原生绑定  →  （无）
+```
+
+取不到时 `show` 按顺序回退：
 
 | 顺序 | 来源 | 说明 |
 |---|---|---|
-| 1 | 当前登录文件 | 旧版客户端仍是明文，直接用 |
-| 2 | **同目录下的历史明文快照** | 加密前留下的 `workbuddy-desktop.<时间戳>.info`，没过期就能用 |
+| 1 | 当前登录文件 | 明文直接用；信封则现场解密 |
+| 2 | 同目录下的历史明文快照 | 加密前留下的 `workbuddy-desktop.<时间戳>.info` |
 | 3 | `accounts.txt` | 上次 `--save` 留下的缓存 |
 
-三条都不通时，脚本会打印诊断（哪个环节缺什么）和下一步可做的事，而不是只甩一句「失败」。
-输出里会标明 token 来自哪个文件、哪天到期，**剩 7 天内会提醒**。
+全都拿不到时，脚本打印诊断（缺客户端 / 缺密钥 / keyId 对不上）和下一步可做的事。
+输出里标明 token 来自哪个文件、哪天到期，**剩 7 天内会提醒**。
 
-#### 已经试过、走不通的两条路（别再重复踩）
+#### 出问题先跑自检
 
-- **从进程内存捞 token**：扫了 13 个 WorkBuddy 进程共约 4 GB 内存，能捞到的只有
-  `app_type=codebuddy` 的 token（CodeBuddy IDE 的）。拿它去调 `/v2/billing/meter/*`
-  一律 **401**——billing 接口只认没有 `app_type`（或 `app_type=workbuddy`）的 token。
-  加 `X-App-Type` 之类的头也无效，网关按 JWT 里的字段判。
-- **用 refreshToken 自己续期**：refresh token 是 Offline 类型（Keycloak，realm=`copilot`，
-  `azp=console`），有效期比 accessToken 长得多，但 `console` 是 confidential client，
-  刷新必须带 `client_secret`。这个值不在客户端 JS 内存里（原生层参与），代码里也没有硬编码。
+```bash
+python switchers/workbuddy/switch_auth.py diag       # 客户端路径 / 密钥来源 / 本机keyId / 文件keyId / 能否取号
+python switchers/workbuddy/switch_auth.py selftest   # AES-256-GCM 已知答案测试（CI 会跑）
+```
+
+`diag` 里两个 keyId 不一致 = 客户端升级换过钥匙，此时旧备份里的 token 解不开，
+需要重新登录一次生成新信封。
+
+#### 青龙上为什么解不开
+
+青龙容器里既没有 `WorkBuddy.exe`，也没有 `atRestSecretKey`，信封在那儿就是死数据。
+所以青龙只能吃**明文账号行**：在装了客户端的机器上 `show` 一次，把结果填进环境变量。
+这也是为什么本项目把「取号」和「签到」分成两个脚本。
+
+#### 关于两条流传很广的说法（已核实，不必再试）
+
+- **「扫进程内存能捞到密钥/令牌」**：扫内存这条路早年有人试过，捞到的往往是
+  `app_type=codebuddy` 的 CodeBuddy IDE 令牌，跟 WorkBuddy 会话不是一回事；
+  取密钥的正确入口是上面的原生绑定，不用 `ReadProcessMemory`，也不用管理员权限，
+  macOS 上还照样能用（内存扫描在 macOS 基本走不通）。
+- **「用 refreshToken 自己续期」**：refresh token 是 Offline 类型（Keycloak，
+  realm=`copilot`，`azp=console`），但 `console` 是 confidential client，刷新必须带
+  `client_secret`，该值由原生层参与计算，客户端 JS 里拿不到。所以别让脚本去刷——
+  让客户端自己续期，脚本每次都现取，才是稳的。
 
 #### 到期后怎么办
 
-`show` 能给出的最晚值就是「最后一次明文落盘的那个 token」。到期后三选一：
+现在不用等过期才处理：客户端刷新后，`show` 每次都能拿到当前最新的 token。
+只想少折腾就：
 
-1. **换台机器 / 旧版客户端**跑一次 `show`，把账号行抄进 `switchers/workbuddy/accounts.txt`；
-2. **装回旧版客户端登录一次**，它会写一份明文快照，再升级回来——快照留在 auth 目录，`show` 能读到；
-3. 若手上有开发版客户端，DevTools 里抓一次 `Authorization: Bearer` 头，手工填 `accounts.txt`。
+1. 本机直接跑 `python checkin.py`（环境变量留空也行，会自动现取）；
+2. 青龙侧定时把 `show` 的结果同步过去（手动或另写同步脚本）；
+3. 完全离线：`WORKBUDDY_ATREST_KEY` 存好密钥，任何机器上都能解本机备份的加密文件。
 
-> 一个 token 管 60 天，一年换 6 次。填好 `accounts.txt` 后，本地跑签到和青龙都不用手动配环境变量。
 
 ## 三、定时任务
 
@@ -111,10 +149,15 @@ SHA256 前 16 位）。本地没有这把钥匙，**解不开**。
 
 ## 五、关键实现说明
 
-- 接口域名必须用 `www.codebuddy.cn`（带 `/v2/`），`copilot.tencent.com` 会 404。
+- 接口域名：脚本用 `www.codebuddy.cn`（带 `/v2/`）。实测同一个 token 打
+  `www.codebuddy.cn` / `www.workbuddy.cn` / `copilot.tencent.com` 的
+  `/v2/billing/meter/checkin-status` 都返回 200；个别账号只在其中一个域返回 401
+  （网关按 JWT 的 `iss` 分流），遇到 401 时换另一个域试一次即可。
+- JWT 里带 `app_type`（常见 `codebuddy`）**不影响** billing 接口——实测这类 token 正常调用。
 - `checkin-status` 状态接口的 `today_checked_in` 字段不可靠（活动未开始时 `active=false`），
   因此采用【直接调签到接口 + 用响应判定】策略，避免漏签。
 - "今天已签到/请明天再来"走 HTTP 400，属业务正常，脚本归为 `skip_already_signed` 而非 error。
+- 签到是**幂等**的：一天跑几次都只领一次。
 
 ## 六、成长计划额外奖励（platforms/workbuddy_growth.py）
 
@@ -154,7 +197,14 @@ python switchers/workbuddy/switch_auth.py            # 交互式菜单
 python switchers/workbuddy/switch_auth.py list       # 仅列出所有备份
 python switchers/workbuddy/switch_auth.py backup     # 仅备份当前登录态(带时间戳)
 python switchers/workbuddy/switch_auth.py show       # 仅输出当前 WORKBUDDY 信息
+python switchers/workbuddy/switch_auth.py diag        # 自检：客户端/密钥/keyId/能否取号
+python switchers/workbuddy/switch_auth.py selftest    # GCM 已知答案测试
+python switchers/workbuddy/switch_auth.py show --key <44字符密钥>   # 手动指定密钥
 ```
+
+`backup` 备份的是**原样字节**（仍是加密信封）。密钥是客户端构建期固定的，
+同一版本客户端之间可以互相还原；客户端大版本升级换了 keyId 时，旧备份需要
+`--key` 或 `accounts.txt` 里的明文兜底。
 
 还原后请重启/刷新 WorkBuddy 桌面端确认账号已切换（若提示重新登录属正常）。
 
@@ -166,6 +216,9 @@ python switchers/workbuddy/switch_auth.py show       # 仅输出当前 WORKBUDDY
 schtasks /Create /TN WorkBuddyAutoCheckin /SC DAILY /ST 09:00 /F ^
   /TR "cmd /c cd /d %USERPROFILE%\aidaka && python platforms\workbuddy.py"
 ```
+
+本机跑可以完全不配 `WORKBUDDY`：`platforms/workbuddy.py` 发现环境变量为空时，
+会调用仓库内的 switcher 现取并解密（要求本机装着客户端且登录过）。
 
 **方式二：WorkBuddy 内置自动化**
 

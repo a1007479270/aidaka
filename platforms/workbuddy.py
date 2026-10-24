@@ -18,17 +18,22 @@ WorkBuddy (腾讯 codebuddy) 每日积分签到 - aidaka 项目平台模块
   一天 1~2 次即可，例如:  0 9,21 * * *
 
 【说明】
-  - ACCESS_TOKEN / UID 取自本机文件(登录后明文):
+  - ACCESS_TOKEN / UID 取自本机登录态:
       Windows: %LOCALAPPDATA%/CodeBuddyExtension/Data/Public/auth/workbuddy-desktop.info
       里面的 auth.accessToken 与 account.uid
-  - token 约 60 天过期，过期需重新取新值更新环境变量
-  - 签到接口域名必须用 www.codebuddy.cn (带 /v2/)，copilot.tencent.com 会 404
+  - 新版客户端（5.6.2+）把这两个字段存成 {$wbEncrypted:1} 信封。本机运行时，
+    环境变量为空会调用仓库内的 switchers/workbuddy/switch_auth.py show 现场解密取号；
+    青龙上单文件运行没有 switcher，仍以环境变量为准（见 docs/workbuddy.md）
+  - token 约 30~60 天过期（客户端每次刷新会续期），过期需重新取新值
+  - 签到接口域名用 www.codebuddy.cn（带 /v2/）；www.workbuddy.cn 与
+    copilot.tencent.com 当前也通，个别账号只在其中一个域返回 401
 """
 
 import os
 import sys
 import json
 import time
+import subprocess
 import urllib.request
 import urllib.error
 
@@ -168,15 +173,43 @@ def checkin_one(acc: dict, dry_run: bool = False, debug: bool = False) -> dict:
     return result
 
 
-# 占位默认账号：未配置 WORKBUDDY 环境变量时回退到此值并报错提示。
+# 占位默认账号：未配置 WORKBUDDY 环境变量、本机也取不到号时回退到此值并报错提示。
 # 请用 switchers/workbuddy/switch_auth.py show 生成真实 token 行写入环境变量
 # （切勿把真实 token 提交到公开仓库）。格式: ACCESS_TOKEN#UID#备注
 DEFAULT_ACCOUNT = "YOUR_ACCESS_TOKEN_HERE#YOUR_UID_HERE#主号(本机)"
 
 
+def local_account_line():
+    """环境变量为空时，用仓库内的 switcher 从本机登录态取一行账号。
+
+    本机装了 WorkBuddy 桌面端时，这条路能直接解出新版客户端的加密信封，
+    所以本机定时任务不必手动维护环境变量。
+    青龙上只上传了这一个文件，找不到 switcher，返回空 → 仍走环境变量。
+    """
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    script = os.path.join(root, "switchers", "workbuddy", "switch_auth.py")
+    if not os.path.isfile(script):
+        return ""
+    try:
+        proc = subprocess.run([sys.executable, script, "show"],
+                              cwd=os.path.dirname(script), capture_output=True,
+                              text=True, encoding="utf-8", errors="replace", timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    for line in (proc.stdout or "").splitlines():
+        line = line.strip()
+        if line.startswith("eyJ") and "#" in line and "$wbEncrypted" not in line:
+            return line
+    return ""
+
+
 def run(dry_run: bool = False, debug: bool = False) -> int:
     """执行签到，返回退出码。dry_run=True 时只查询状态不实际签到。"""
     raw = os.environ.get("WORKBUDDY", "").strip()
+    if not raw:
+        raw = local_account_line()
+        if raw:
+            print("[凭据] 环境变量为空，已从本机登录态取号（新版加密信封已就地解密）")
     if not raw:
         # 青龙未配置环境变量时，回退到占位默认账号（会触发 no_account 提示）
         raw = DEFAULT_ACCOUNT

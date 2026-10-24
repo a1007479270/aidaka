@@ -53,7 +53,7 @@ CRED_SOURCE = {
     "env": "环境变量",
     "file": "本地 %s" % LOCAL_ACCOUNT_FILE,
     "show": "本机登录态（switchers 现取）",
-    "encrypted": "登录态已被新版客户端加密（见 docs/workbuddy.md「新版加密」一节）",
+    "encrypted": "登录态是加密信封且本机解不开（见 docs/workbuddy.md「新版加密」一节）",
     "none": "未找到本地凭证",
 }
 
@@ -126,7 +126,7 @@ def _pick_account_line(key, text):
 
 
 def _run_switcher_show(key):
-    """跑 switchers/<平台>/switch_auth.py show，返回输出；密文信封返回 ENCRYPTED。"""
+    """跑 switchers/<平台>/switch_auth.py show，返回输出；确实解不开时返回 ENCRYPTED。"""
     script = os.path.join(SWITCHERS_DIR, key, "switch_auth.py")
     if not os.path.isfile(script):
         return ""
@@ -139,10 +139,12 @@ def _run_switcher_show(key):
         except (OSError, subprocess.SubprocessError):
             continue
         blob = (proc.stdout or "") + "\n" + (proc.stderr or "")
-        if "$wbEncrypted" in blob:
-            return "ENCRYPTED"
+        # 先看有没有可用账号行（新版加密会被 switcher 就地解开）；
+        # 只有一行都没有、且输出里提到信封时，才判定为解不开。
         if _pick_account_line(key, blob):
             return blob
+        if "$wbEncrypted" in blob:
+            return "ENCRYPTED"
     return ""
 
 

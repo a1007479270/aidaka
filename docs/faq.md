@@ -96,5 +96,10 @@ A：不要。四个平台签到脚本都是纯标准库。只有 `switchers/ima`
 
 ### Q：备份目录能拷贝到别的电脑用吗？
 
-A：WorkBuddy 的备份是明文文件，可以；Qoder/TraeWork 的备份含 DPAPI/机器绑定加密数据，
+A：WorkBuddy 可以，但要满足一个条件——**目标机器的客户端版本相同**。
+5.6.2 起登录态里的 token 是 AES-256-GCM 信封，钥匙是客户端构建期写死的常量
+（不是每台机器随机生成），所以同一版本之间能互相解开；客户端大版本升级换了
+`keyId` 后，旧备份就需要 `WORKBUDDY_ATREST_KEY` 或 `accounts.txt` 里的明文兜底。
+`python switchers/workbuddy/switch_auth.py diag` 会同时打印「本机 keyId」和「文件 keyId」，
+两者一致才能解。Qoder/TraeWork 的备份含 DPAPI/机器绑定数据，
 **只能在同一台机器、同一个 Windows 用户下还原**。

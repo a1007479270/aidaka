@@ -64,10 +64,12 @@ python checkin.py --debug
 | `--save-local-cred` | 把取到的账号行存成 `switchers/<平台>/accounts.txt`，下次直接用（含明文 token，已在 `.gitignore` 里） |
 | `--no-local-cred` | 关掉本地回退，只用环境变量（青龙、CI 等场景） |
 
-> **WorkBuddy 的特殊情况**：新版客户端把 token 加密成 `{"$wbEncrypted":1,...}` 信封，本地解不开。
-> `show` 会退到「同目录下的历史明文快照」或 `accounts.txt` 缓存，所以**通常也能自动取到**，
-> 但拿到的是最后一次明文落盘的那个 token（约 60 天有效期），客户端刷新后不会自动跟着更新。
-> 详见 [docs/workbuddy.md](docs/workbuddy.md#️-新版客户端把字段加密了)。其余三个平台都是实时从本机登录态取。
+> **WorkBuddy 的特殊情况**：新版客户端把 token 加密成 `{"$wbEncrypted":1,...}` 信封（AES-256-GCM）。
+> 密钥不落盘，但客户端自带原生绑定能当场交出来——switcher 用 `ELECTRON_RUN_AS_NODE=1`
+> 起一个隐藏子进程取密钥，在本机解密，所以**四个平台都是从本机登录态实时取号**，
+> 不需要旧版客户端、也不用等 token 过期才换。
+> 青龙侧没有客户端、解不开信封，仍需把账号行填进环境变量（见
+> [docs/workbuddy.md](docs/workbuddy.md#新版客户端把字段加密了)）。
 
 ### 方式二：青龙面板（服务器 7×24 运行）
 
@@ -156,6 +158,8 @@ python switchers/traework/switch_auth.py show
 ```
 
 多账号：在桌面端切换登录下一个账号 → 再跑一次 `show` → 逐行贴进同一个环境变量。
+WorkBuddy 的 `show` 会自动解开新版加密信封，前提是本机装着客户端（自定义目录用
+`WORKBUDDY_CLIENT_EXE` 指定）；这一步只能在 Windows 本机做，青龙上解不开。
 `switchers/` 同时提供登录态**备份/还原**（还原前自动备份当前登录态，防止丢号），
 备份目录跟随脚本自身，拷到任意目录/电脑都能用。
 

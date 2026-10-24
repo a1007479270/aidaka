@@ -17,6 +17,7 @@
   script: |
     set -e
     python -m compileall -q checkin.py platforms switchers
+    python switchers/workbuddy/switch_auth.py selftest
     python - <<'PY'
     import glob, io, json, re, sys
 

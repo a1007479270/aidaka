@@ -1,5 +1,8 @@
 @echo off
 setlocal
+REM Force Python to use the native Windows console path; a stale
+REM PYTHONIOENCODING makes Chinese output unreadable (GBK console vs UTF-8 bytes).
+set "PYTHONIOENCODING="
 REM ============================================================
 REM  ima credential manager (Windows launcher) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show|extract]

@@ -52,6 +52,7 @@ WorkBuddy 登录态备份 / 恢复 / 查看 一体脚本（aidaka 项目 · Wind
 """
 import os
 import sys
+import io
 import json
 import glob
 import time
@@ -72,6 +73,37 @@ AUTH_DIR = os.path.dirname(AUTH_FILE)
 BACKUP_DIR = os.path.join(BASE_DIR, "workbuddy_auth_backup")
 # 上次取到的账号行缓存（明文 token，已被 .gitignore 挡住）
 CACHE_FILE = os.path.join(BASE_DIR, "accounts.txt")
+
+
+# ======================================================================
+# 控制台中文输出（Windows）
+# ======================================================================
+def init_console() -> None:
+    """保证中文在 Windows 控制台正确显示（本机运行时才有意义）。
+
+    正常情况 Python 3 在 Windows 控制台走 WriteConsoleW 写宽字符，与 chcp
+    无关。但外部一旦设了 PYTHONIOENCODING（WorkBuddy / VS Code / 某些终端
+    会注入 PYTHONIOENCODING=utf-8），Python 就改把 UTF-8 字节直接写进控制台，
+    而控制台仍按自己的 chcp（中文系统 936=GBK）解释这些字节，于是「小天-售后」
+    显示成「灏忓ぉ-鍞悗」，菜单和账号名全花掉。
+
+    这里重新接管 stdout/stderr，强制回到 Unicode 控制台写入路径，与
+    PYTHONIOENCODING、chcp 彻底解耦。管道/重定向（青龙、> file）不动，
+    两个流各自判断，避免 stdout 重定向时 stderr 的提示仍乱码。
+    """
+    if os.name != "nt":
+        return
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        try:
+            if stream is None or not stream.isatty():
+                continue
+            raw = io._WindowsConsoleIO(stream.fileno(), "w", closefd=False)
+            setattr(sys, name, io.TextIOWrapper(
+                raw, encoding="utf-8", errors="replace",
+                line_buffering=True, write_through=True))
+        except Exception:
+            continue   # 拿不到控制台就保持原样，绝不能因此中断
 
 
 # ======================================================================
@@ -695,6 +727,7 @@ def selftest():
 
 
 def main():
+    init_console()
     os.makedirs(BACKUP_DIR, exist_ok=True)
     argv = [a for a in sys.argv[1:]]
     save = "--save" in argv

@@ -103,3 +103,28 @@ A：WorkBuddy 可以，但要满足一个条件——**目标机器的客户端�
 `python switchers/workbuddy/switch_auth.py diag` 会同时打印「本机 keyId」和「文件 keyId」，
 两者一致才能解。Qoder/TraeWork 的备份含 DPAPI/机器绑定数据，
 **只能在同一台机器、同一个 Windows 用户下还原**。
+
+### Q：Windows 控制台里菜单和账号名是乱码（`灏忓ぉ-鍞悗`）？
+
+A：这不是 token 或解密错了，是**显示层的编码错配**，账号本身没问题。
+
+原因：外部环境设了 `PYTHONIOENCODING=utf-8`（WorkBuddy 客户端、VS Code、
+部分终端会给子进程注入这个变量）。Python 一旦看到它，就放弃 Windows 控制台
+原生的 Unicode 写入路径，改为把 UTF-8 字节直接写进控制台；而中文系统的控制台
+`chcp` 是 936（GBK），按 GBK 去解释这些字节，于是「小天-售后」变成
+「灏忓ぉ-鍞悗」。纯 ASCII 的 token 不受影响，所以看起来只有账号名坏了。
+
+已经处理好了，两道保险：
+
+1. 所有入口脚本（`checkin.py`、`platforms/*.py`、`switchers/*/switch_auth.py`、
+   `to_wps.py`）都会在启动时 `init_console()`：检测到 stdout/stderr 连着真实
+   控制台，就重新接管为 CPython 的 Unicode 控制台流，与 `PYTHONIOENCODING`、
+   `chcp` 彻底解耦；
+2. 各 `switch_auth.bat` 在 `setlocal` 后加了一行 `set "PYTHONIOENCODING="`，
+   让 Python 回到原生路径。
+
+青龙（Linux）和 `> out.txt` 重定向不受影响——此时不是控制台，脚本不做任何接管。
+
+如果拿到的 token 写进 `accounts.txt` 后账号名仍然乱，那是 `accounts.txt`
+被别的编辑器按 GBK 存过了，删掉文件重新 `show --save` 即可（脚本始终按 UTF-8 读写）。
+

@@ -40,6 +40,7 @@ import hashlib
 import argparse
 import urllib.request
 import urllib.error
+import io
 
 # ---- 配置 ----
 BASE = "https://api.trae.cn"
@@ -229,6 +230,7 @@ def run(dry_run: bool = False, debug: bool = False) -> int:
 
 def main(argv=None) -> int:
     """命令行入口: python traework.py [--dry-run] [--debug]"""
+    init_console()
     parser = argparse.ArgumentParser(description="TraeWork 每日积分签到（aidaka 平台模块）")
     parser.add_argument("--debug", action="store_true",
                         help="打印接口原始响应（也可用环境变量 TRAEWORK_DEBUG=1）")
@@ -238,6 +240,33 @@ def main(argv=None) -> int:
     debug = args.debug or os.environ.get("TRAEWORK_DEBUG") == "1"
     return run(dry_run=args.dry_run, debug=debug)
 
+
+def init_console() -> None:
+    """保证中文在 Windows 控制台正确显示（本机运行时才有意义）。
+
+    正常情况 Python 3 在 Windows 控制台走 WriteConsoleW 写宽字符，与 chcp
+    无关。但外部一旦设了 PYTHONIOENCODING（WorkBuddy / VS Code / 某些终端
+    会注入 PYTHONIOENCODING=utf-8），Python 就改把 UTF-8 字节直接写进控制台，
+    而控制台仍按自己的 chcp（中文系统 936=GBK）解释这些字节，于是「小天-售后」
+    显示成「灏忓ぉ-鍞悗」，菜单和账号名全花掉。
+
+    这里重新接管 stdout/stderr，强制回到 Unicode 控制台写入路径，与
+    PYTHONIOENCODING、chcp 彻底解耦。管道/重定向（青龙、> file）不动，
+    两个流各自判断，避免 stdout 重定向时 stderr 的提示仍乱码。
+    """
+    if os.name != "nt":
+        return
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        try:
+            if stream is None or not stream.isatty():
+                continue
+            raw = io._WindowsConsoleIO(stream.fileno(), "w", closefd=False)
+            setattr(sys, name, io.TextIOWrapper(
+                raw, encoding="utf-8", errors="replace",
+                line_buffering=True, write_through=True))
+        except Exception:
+            continue   # 拿不到控制台就保持原样，绝不能因此中断
 
 if __name__ == "__main__":
     sys.exit(main())

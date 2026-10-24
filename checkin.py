@@ -154,6 +154,20 @@ def _pick_account_line(key, text):
     return ""
 
 
+def _py_env():
+    """子进程固定用 UTF-8 写管道。
+
+    父进程按 UTF-8 解码子进程输出；但子进程一旦 stdio 是管道，默认用系统
+    区域编码（中文 Windows = cp936）写字节，两边错位 → 账号名变成
+    「鐢ㄦ埛6600237656」这种乱码。显式按键固定住，跨机器跨终端都一样。
+    """
+    env = dict(os.environ)
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    env.pop("PYTHONLEGACYWINDOWSSTDIO", None)
+    return env
+
+
 def _run_switcher_show(key):
     """跑 switchers/<平台>/switch_auth.py show，返回输出；确实解不开时返回 ENCRYPTED。"""
     script = os.path.join(SWITCHERS_DIR, key, "switch_auth.py")
@@ -164,7 +178,7 @@ def _run_switcher_show(key):
             proc = subprocess.run(
                 cmd + [script, "show"], cwd=os.path.dirname(script),
                 capture_output=True, text=True, encoding="utf-8",
-                errors="replace", timeout=90)
+                errors="replace", timeout=90, env=_py_env())
         except (OSError, subprocess.SubprocessError):
             continue
         blob = (proc.stdout or "") + "\n" + (proc.stderr or "")

@@ -202,10 +202,24 @@ def _python_candidates():
     return cands
 
 
+def _py_env():
+    """子进程固定用 UTF-8 写管道。
+
+    本脚本按 UTF-8 解码 switcher 的输出；但子进程 stdio 是管道时，默认用
+    系统区域编码（中文 Windows = cp936）写字节，两边错位 → 账号名变成
+    「鐢ㄦ埛6600237656」。显式固定，避免换个终端/换台机器又复现。
+    """
+    env = dict(os.environ)
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    env.pop("PYTHONLEGACYWINDOWSSTDIO", None)
+    return env
+
+
 def _has_module(py_cmd, module):
     try:
         r = subprocess.run(py_cmd + ["-c", "import " + module],
-                           capture_output=True, timeout=20)
+                           capture_output=True, timeout=20, env=_py_env())
         return r.returncode == 0
     except (OSError, subprocess.SubprocessError):
         return False
@@ -223,7 +237,8 @@ def run_switcher(platform):
         try:
             r = subprocess.run(py_cmd + [script, "show"], cwd=os.path.dirname(script),
                                capture_output=True, text=True,
-                               encoding="utf-8", errors="replace", timeout=120)
+                               encoding="utf-8", errors="replace", timeout=120,
+                               env=_py_env())
         except (OSError, subprocess.SubprocessError) as exc:
             last = ("", str(exc))
             continue
@@ -237,7 +252,8 @@ def run_switcher(platform):
                 try:
                     r2 = subprocess.run(alt + [script, "show"], cwd=os.path.dirname(script),
                                         capture_output=True, text=True,
-                                        encoding="utf-8", errors="replace", timeout=120)
+                                        encoding="utf-8", errors="replace", timeout=120,
+                                        env=_py_env())
                     return r2.stdout or "", r2.stderr or ""
                 except (OSError, subprocess.SubprocessError):
                     continue

@@ -128,3 +128,25 @@ A：这不是 token 或解密错了，是**显示层的编码错配**，账号�
 如果拿到的 token 写进 `accounts.txt` 后账号名仍然乱，那是 `accounts.txt`
 被别的编辑器按 GBK 存过了，删掉文件重新 `show --save` 即可（脚本始终按 UTF-8 读写）。
 
+### Q：`to_wps.py` / `checkin.py` 取号时账号名乱码，或者提示「识别不到账号行」？
+
+A：这是**另一个**编码错配，跟上面的控制台无关：父进程按 UTF-8 解码子进程输出，
+而子进程的 stdout 是**管道**时，默认按系统区域编码（中文 Windows = cp936）写字节。
+两边用的编码不一样，账号名就花，甚至整行账号都认不出来。
+
+已处理：`checkin.py`、`platforms/workbuddy.py`、`switchers/to_wps.py` 在调起子进程
+（`switch_auth.py show`）时会显式传入 `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1`，
+让「写」的一端固定成 UTF-8，与「读」的一端对齐。这个修复与终端、`chcp`、
+是否装了 WorkBuddy 客户端都无关，换机器也不会复发。
+
+顺带修掉的同类问题：Qoder 的 `switch_auth.py` / `platforms/qoder.py` 原来无条件
+`sys.stdout.reconfigure(encoding="utf-8")`，会把已经接管好的控制台流改回「UTF-8
+字节直写」，于是出现 `=== 褰撳墠 QODER 淇℃伅`。现在只在**非控制台**（管道/重定向）
+时才 reconfigure。
+
+### Q：排查乱码时要注意什么？
+
+A：命令**不要接管道**（`| head`、`| Select-Object`、`| Select-String`）。管道会让
+`isatty()` 变 False，走的是另一条编码路径，测出来的现象和真实双击运行时并不相同，
+很容易误判。要留证据就直接看窗口，或先重定向到文件再单独读文件。
+

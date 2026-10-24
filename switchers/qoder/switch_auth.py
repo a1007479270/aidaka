@@ -360,7 +360,9 @@ def show_current():
 
 def main():
     init_console()
-    if hasattr(sys.stdout, "reconfigure"):
+    # 只在管道/重定向时把编码固定成 UTF-8；控制台流交给 init_console，
+    # 这里再 reconfigure 会把已经接管好的控制台流改坏（中文变「褰撳墠」）。
+    if not sys.stdout.isatty() and hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     os.makedirs(BACKUP_DIR, exist_ok=True)
     mode = sys.argv[1] if len(sys.argv) > 1 else "interactive"

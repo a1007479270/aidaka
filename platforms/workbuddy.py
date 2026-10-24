@@ -208,6 +208,16 @@ def checkin_one(acc: dict, dry_run: bool = False, debug: bool = False) -> dict:
 DEFAULT_ACCOUNT = "YOUR_ACCESS_TOKEN_HERE#YOUR_UID_HERE#主号(本机)"
 
 
+def _py_env():
+    """子进程固定用 UTF-8 写管道，否则中文 Windows 上按 cp936 写、父进程按
+    UTF-8 解，账号名就成乱码（鐢ㄦ埛…）。"""
+    env = dict(os.environ)
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
+    env.pop("PYTHONLEGACYWINDOWSSTDIO", None)
+    return env
+
+
 def local_account_line():
     """环境变量为空时，用仓库内的 switcher 从本机登录态取一行账号。
 
@@ -222,7 +232,8 @@ def local_account_line():
     try:
         proc = subprocess.run([sys.executable, script, "show"],
                               cwd=os.path.dirname(script), capture_output=True,
-                              text=True, encoding="utf-8", errors="replace", timeout=120)
+                              text=True, encoding="utf-8", errors="replace",
+                              timeout=120, env=_py_env())
     except (OSError, subprocess.SubprocessError):
         return ""
     for line in (proc.stdout or "").splitlines():

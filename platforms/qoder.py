@@ -347,7 +347,9 @@ def checkin_one(acc, dry_run=False, debug=False):
 
 def run(dry_run: bool = False, debug: bool = False) -> int:
     """执行签到，返回退出码。dry_run=True 时只列出活动不领取。"""
-    if hasattr(sys.stdout, "reconfigure"):
+    # 只给管道/重定向固定 UTF-8；控制台流由 init_console 接管，
+    # 再 reconfigure 会把它改坏（中文变「褰撳墠」）。
+    if not sys.stdout.isatty() and hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     accounts, source = load_accounts()
     if not accounts:

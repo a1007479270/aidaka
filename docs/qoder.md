@@ -2,6 +2,7 @@
 
 Qoder CN 个人版每日 Credits 自动领取 + 桌面端登录态备份/切换 + 本机一键签到。
 
+- **奖励**：每日 **100 Credits**（一周 700 Credits）
 - 签到脚本：`platforms/qoder.py`（单文件自包含，零依赖）
 - 登录态管理：`switchers/qoder/switch_auth.py`（Windows，DPAPI+CNG AES-GCM 解密，零第三方依赖）
 

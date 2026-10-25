@@ -16,12 +16,26 @@
 
 ## 支持平台
 
-| 平台 | 奖励 | 环境变量 | 账号行格式 | 详细文档 |
-| --- | --- | --- | --- | --- |
-| ima（腾讯 AI 工作台） | 每日登录福利 + 满签奖励 | `IMA` | `ima_uid#uid_type#ima_guid#refresh_token#备注` | [docs/ima.md](docs/ima.md) |
-| WorkBuddy（腾讯 CodeBuddy） | 每日积分 | `WORKBUDDY` | `ACCESS_TOKEN#UID#备注` | [docs/workbuddy.md](docs/workbuddy.md) |
-| Qoder（CN 个人版） | 每日 Credits | `QODER` | `ACCESS_TOKEN#REFRESH_TOKEN#UID#备注#设备JSON` | [docs/qoder.md](docs/qoder.md) |
-| TraeWork（国内个人版） | 每日积分 | `TRAEWORK` | `ACCESS_TOKEN#UID#备注#设备ID` | [docs/traework.md](docs/traework.md) |
+| 平台 | 每日奖励 | 额外奖励 | 环境变量 | 账号行格式 | 详细文档 |
+| --- | --- | --- | --- | --- | --- |
+| ima（腾讯 AI 工作台） | **50 积分**（算力） | 连签满 7 天再 **+100 积分** | `IMA` | `ima_uid#uid_type#ima_guid#refresh_token#备注` | [docs/ima.md](docs/ima.md) |
+| WorkBuddy（腾讯 CodeBuddy） | **100 积分** | — | `WORKBUDDY` | `ACCESS_TOKEN#UID#备注` | [docs/workbuddy.md](docs/workbuddy.md) |
+| Qoder（CN 个人版） | **100 Credits** | — | `QODER` | `ACCESS_TOKEN#REFRESH_TOKEN#UID#备注#设备JSON` | [docs/qoder.md](docs/qoder.md) |
+| TraeWork（国内个人版） | **100 积分** | — | `TRAEWORK` | `ACCESS_TOKEN#UID#备注#设备ID` | [docs/traework.md](docs/traework.md) |
+
+按一个账号算，签满一周：
+
+| 平台 | 一周合计 | 算法 |
+| --- | --- | --- |
+| ima | **450 积分** | 50 × 7 天 + 100 满签奖励 |
+| WorkBuddy | **700 积分** | 100 × 7 天 |
+| Qoder | **700 Credits** | 100 × 7 天 |
+| TraeWork | **700 积分** | 100 × 7 天 |
+| 四平台合计 | **≈ 2550 分/周** | — |
+
+> 数值为各平台当前活动标准（2026-10 实测），官方随时可能调整，以平台活动页为准。
+> ima 的满签奖励由同一脚本自动顺带领取；每日金额以接口返回的 `points` / `credits` 字段为准
+> （实际到账可能带活动加成，比标称值更高）。
 
 多账号统一用**换行**分隔，一行一个账号，例如：
 
@@ -219,6 +233,8 @@ token 失效怎么办、活动列表为空、Qoder 设备头、TraeWork 设备 I
 
 `aidaka` (AI Daka — "daily punch-in") is a zero-dependency (Python stdlib only) daily
 check-in toolkit for four AI dev-tool platforms: ima, WorkBuddy, Qoder and TraeWork.
+Daily rewards: 100 credits each on WorkBuddy, Qoder and TraeWork; 50 on ima plus a
+100-point bonus for a full 7-day streak.
 Three ways to run it: locally (`python checkin.py`), on a QingLong panel, or entirely
 in the cloud via Kingsoft Docs / WPS AirScript — no server needed, works even when your
 PC is off. Multi-account, idempotent, with Windows desktop login-state backup/restore

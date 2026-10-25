@@ -2,6 +2,7 @@
 
 WorkBuddy（腾讯 CodeBuddy）每日积分签到 + 成长计划奖励探测 + 桌面端登录态备份/切换。
 
+- **奖励**：每日 **100 积分**（一周 700 积分）
 - 签到脚本：`platforms/workbuddy.py`（单文件自包含，零依赖）
 - 成长计划：`platforms/workbuddy_growth.py`（附属脚本，默认 DRYRUN 安全模式）
 - 登录态管理：`switchers/workbuddy/switch_auth.py`（Windows，纯标准库）

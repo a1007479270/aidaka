@@ -2,6 +2,7 @@
 
 TraeWork 国内个人版每日积分签到 + 桌面端登录态备份/切换。
 
+- **奖励**：每日 **100 积分**（一周 700 积分）
 - 签到脚本：`platforms/traework.py`（单文件自包含，零依赖）
 - 登录态管理：`switchers/traework/switch_auth.py`（Windows，AES-128-CBC 解密，需 `cryptography`）
 

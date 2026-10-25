@@ -1,54 +1,36 @@
 @echo off
 setlocal
-REM Force Python to use the native Windows console path; a stale
-REM PYTHONIOENCODING makes Chinese output unreadable (GBK console vs UTF-8 bytes).
+REM Keep Python on the native Windows console path. A stale PYTHONIOENCODING
+REM makes Chinese output unreadable (GBK console vs UTF-8 bytes).
 set "PYTHONIOENCODING="
 REM ============================================================
 REM  ima credential manager (Windows launcher) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show|extract]
-REM  It delegates to switch_auth.py (Python).
-REM  ima 凭证提取需要 cryptography 库，缺失时会自动安装。
+REM  It only launches switch_auth.py (Python); all user-facing messages are
+REM  Chinese and printed there, because this .bat must stay pure ASCII.
+REM
+REM  ima cookies are Chromium v10 (AES-256-GCM) + DPAPI; the parser in
+REM  switch_auth.py is pure standard library and reads while ima runs.
 REM ============================================================
 set "SCRIPT=%~dp0switch_auth.py"
 if not exist "%SCRIPT%" (
-    echo [错误] 本目录下找不到 switch_auth.py，请确保本文件和它在同一个目录。
+    echo [ERROR] switch_auth.py not found in this folder.
+    echo         Keep this .bat and switch_auth.py together.
     pause
     exit /b 1
 )
 
-REM Find a python interpreter that can import cryptography.
+REM Find a python interpreter (try py, python, python3)
 set "PY="
-set "FALLBACK="
-for %%C in (py python python3) do (
-    if not defined PY (
-        where %%C >nul 2>nul && %%C -c "import cryptography" >nul 2>nul && set "PY=%%C"
-    )
-)
-for %%C in (py python python3) do (
-    if not defined FALLBACK (
-        where %%C >nul 2>nul && %%C -c "import sys" >nul 2>nul && set "FALLBACK=%%C"
-    )
-)
-
-if defined PY goto :run
-if not defined FALLBACK (
-    echo [错误] 没有找到 Python。请安装 Python 3.8 以上版本并加入 PATH， or use the py launcher.
-    echo         下载地址：https://www.python.org/downloads/
+where py     >nul 2>nul && set "PY=py"
+if not defined PY ( where python  >nul 2>nul && set "PY=python" )
+if not defined PY ( where python3 >nul 2>nul && set "PY=python3" )
+if not defined PY (
+    echo [ERROR] Python not found. Install Python 3.8+ and add it to PATH,
+    echo         or edit this file and set PY to the full path of python.exe.
     pause
     exit /b 1
 )
 
-echo [准备] 缺少 cryptography 库，正在自动安装（只需装一次）……
-%FALLBACK% -m pip install --quiet --disable-pip-version-check cryptography
-%FALLBACK% -c "import cryptography" >nul 2>nul
-if errorlevel 1 (
-    echo [错误] 自动安装 cryptography 失败。请先手动执行下面这条命令，然后重新运行：
-    echo             %FALLBACK% -m pip install cryptography
-    pause
-    exit /b 1
-)
-set "PY=%FALLBACK%"
-
-:run
 "%PY%" "%SCRIPT%" %*
 pause

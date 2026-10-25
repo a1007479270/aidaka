@@ -151,7 +151,7 @@ aidaka/
 脚本会直接输出青龙环境变量所需的账号行，**复制即用**，不用手动翻文件、不用抓包：
 
 ```bash
-python switchers/ima/switch_auth.py show        # ima（extract 需先完全退出 ima）
+python switchers/ima/switch_auth.py show        # ima（ima 开着也能 extract）
 python switchers/workbuddy/switch_auth.py show
 python switchers/qoder/switch_auth.py show
 python switchers/traework/switch_auth.py show

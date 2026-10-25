@@ -5,7 +5,8 @@
 # 不要写进本文件。
 #
 # 校验项针对本项目踩过的坑：
-#   1. 所有 .bat 必须 GBK 编码 + CRLF 行尾（cmd 按 GBK 解析 UTF-8 字节会断行、整脚本报错）
+#   1. 所有 .bat 必须是**纯 ASCII** + CRLF 行尾：中文写进 bat 会在 chcp=936 的
+#      控制台上整屏乱码（cmd 按 OEM 码页解析），中文提示一律交给 .py 输出
 #   2. wps-airscript/deploy.html 由 build.py 从 checkin.js 生成，两者不能漂移
 #   3. 签到脚本零第三方依赖，只做语法编译与 --list 冒烟
 
@@ -23,15 +24,14 @@
 
     bad = []
 
-    # .bat：必须 GBK 编码 + CRLF 行尾
-    for p in sorted(glob.glob("switchers/**/*.bat", recursive=True)):
+    # .bat：必须纯 ASCII + CRLF 行尾（含中文就会在中文控制台上乱码）
+    for p in sorted(glob.glob("**/*.bat", recursive=True)):
         b = io.open(p, "rb").read()
         if b.count(b"\r\n") != b.count(b"\n"):
             bad.append("%s 行尾不是 CRLF" % p)
-        try:
-            b.decode("gbk")
-        except UnicodeDecodeError:
-            bad.append("%s 不是 GBK 编码（cmd 会解析错乱）" % p)
+        non_ascii = sum(1 for x in b if x > 127)
+        if non_ascii:
+            bad.append("%s 含 %d 个非 ASCII 字节（中文必须放到 .py 里输出）" % (p, non_ascii))
 
     # deploy.html 内嵌脚本必须与 checkin.js 一致
     html = io.open("wps-airscript/deploy.html", encoding="utf-8").read()

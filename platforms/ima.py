@@ -22,9 +22,10 @@ ima (ima.copilot 腾讯AI工作台) 「每日登录福利」自动签到 - aidak
 
 【取凭证】
   凭证藏在 ima 客户端本地加密存储里，Windows 上用本项目配套的
-  switchers/ima/switch_auth.py 提取（先完全退出 ima 再运行）：
+  switchers/ima/switch_auth.py 提取（ima 开着也能提取，纯标准库）：
       python switchers/ima/switch_auth.py extract
-  产物 credentials.json 内容即为 ima_uid/uid_type/ima_guid/refresh_token。
+  产物写在 switchers/ima/credentials.json（本文件会自动向上找到）。
+  内容即为 ima_uid/uid_type/ima_guid/refresh_token。
 
 【说明】
   - access_token 仅 2 小时有效，脚本每次先用 refresh_token 换新，无需手动维护。
@@ -200,12 +201,33 @@ def parse_accounts(raw):
     return accounts
 
 
+def cred_candidates():
+    """credentials.json 的候选路径（按优先级）。
+
+    switchers/ima/switch_auth.py 默认把凭证写在它自己目录下，
+    而本文件在 platforms/ 下；两边都要能找到，本地单账号模式才不会
+    「明明提取成功却报未找到凭证」。青龙里直接用环境变量，用不到这里。
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(here)
+    env = os.environ.get("IMA_CRED_FILE")
+    cands = [env] if env else []
+    cands += [
+        os.path.join(here, "credentials.json"),
+        os.path.join(root, "switchers", "ima", "credentials.json"),
+        os.path.join(root, "credentials.json"),
+    ]
+    return [p for p in cands if p]
+
+
 def load_file_account():
     """单账号本地模式：从 credentials.json 读取。"""
-    path = os.environ.get("IMA_CRED_FILE") or os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "credentials.json"
-    )
-    if not os.path.exists(path):
+    path = None
+    for cand in cred_candidates():
+        if os.path.exists(cand):
+            path = cand
+            break
+    if not path:
         return None
     try:
         with open(path, "r", encoding="utf-8") as fp:
@@ -218,7 +240,7 @@ def load_file_account():
     cred.setdefault("ima_uid", "")
     cred.setdefault("uid_type", "1")
     cred.setdefault("ima_guid", "")
-    cred["remark"] = "credentials.json"
+    cred["remark"] = cred.get("remark") or "credentials.json"
     return cred
 
 

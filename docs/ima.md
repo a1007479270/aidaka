@@ -36,7 +36,8 @@ ima（ima.copilot 腾讯 AI 工作台）「每日登录福利」自动签到：�
 
 ## 二、取凭证（每个账号做一次）
 
-ima 的凭证藏在客户端本地加密存储里，用本项目脚本一键提取（**先完全退出 ima，含托盘图标**）：
+ima 的凭证藏在客户端本地加密存储里，用本项目脚本一键提取（**ima 开着也能提取**，
+脚本用共享读取打开 Cookie 库，不必退出客户端）：
 
 ```bash
 python switchers/ima/switch_auth.py extract
@@ -50,8 +51,8 @@ python switchers/ima/switch_auth.py show
 
 会直接打印青龙环境变量行，复制即用。
 
-> 提取功能仅支持 Windows，需要 `cryptography`（`pip install cryptography`；
-> 双击 `switch_auth.bat` 会自动检测安装）。
+> 提取功能仅支持 Windows（需要 DPAPI 解出 Cookie 库主密钥），但**零第三方依赖**：
+> AES-256-GCM 是脚本自带的纯标准库实现，不用 `pip install` 任何东西。
 
 ## 三、定时任务
 

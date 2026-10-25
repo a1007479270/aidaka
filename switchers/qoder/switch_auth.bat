@@ -1,16 +1,20 @@
 @echo off
 setlocal
-REM Force Python to use the native Windows console path; a stale
-REM PYTHONIOENCODING makes Chinese output unreadable (GBK console vs UTF-8 bytes).
+REM Keep Python on the native Windows console path. A stale PYTHONIOENCODING
+REM makes Chinese output unreadable (GBK console vs UTF-8 bytes).
 set "PYTHONIOENCODING="
 REM ============================================================
 REM  Qoder login-state switcher / signin launcher (Windows) - aidaka
 REM  Double-click this .bat, or run:  switch_auth.bat [list|backup|show|signin]
-REM  It just delegates to switch_auth.py (Python).
+REM  It only launches switch_auth.py (Python); all user-facing messages are
+REM  Chinese and printed there, because this .bat must stay pure ASCII.
+REM
+REM  Qoder credentials live in the client's own config store.
 REM ============================================================
 set "SCRIPT=%~dp0switch_auth.py"
 if not exist "%SCRIPT%" (
-    echo [错误] 本目录下找不到 switch_auth.py，请确保本文件和它在同一个目录。
+    echo [ERROR] switch_auth.py not found in this folder.
+    echo         Keep this .bat and switch_auth.py together.
     pause
     exit /b 1
 )
@@ -21,14 +25,14 @@ where py     >nul 2>nul && set "PY=py"
 if not defined PY ( where python  >nul 2>nul && set "PY=python" )
 if not defined PY ( where python3 >nul 2>nul && set "PY=python3" )
 if not defined PY (
-    echo [错误] 没有找到 Python。请安装 Python 3.8 以上版本并加入 PATH，
-    echo         或用记事本打开本文件，把 PY 改成 python.exe 的完整路径。
+    echo [ERROR] Python not found. Install Python 3.8+ and add it to PATH,
+    echo         or edit this file and set PY to the full path of python.exe.
     pause
     exit /b 1
 )
 
 "%PY%" "%SCRIPT%" %*
 set "RC=%ERRORLEVEL%"
-if not "%RC%"=="0" echo [退出] switch_auth.py 返回码 %RC%
+if not "%RC%"=="0" echo [EXIT] switch_auth.py returned %RC%
 pause
 exit /b %RC%
